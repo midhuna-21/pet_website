@@ -468,18 +468,18 @@ export default function Home() {
               transition: "all 0.3s ease",
               boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
             }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "#059669";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow =
-                "0 6px 20px rgba(16, 185, 129, 0.4)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "#10b981";
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow =
-                "0 4px 12px rgba(16, 185, 129, 0.3)";
-            }}
+            // onMouseEnter={(e) => {
+            //   e.target.style.background = "#059669";
+            //   e.target.style.transform = "translateY(-2px)";
+            //   e.target.style.boxShadow =
+            //     "0 6px 20px rgba(16, 185, 129, 0.4)";
+            // }}
+            // onMouseLeave={(e) => {
+            //   e.target.style.background = "#10b981";
+            //   e.target.style.transform = "translateY(0)";
+            //   e.target.style.boxShadow =
+            //     "0 4px 12px rgba(16, 185, 129, 0.3)";
+            // }}
           >
             Get Started Today
           </button>

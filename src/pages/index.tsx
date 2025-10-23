@@ -210,14 +210,14 @@ export default function Home() {
 
       {/* ---------------- HOW IT WORKS SECTION ---------------- */}
       <section
-        // style={{
-        //   background: "linear-gradient(180deg, #0e1723 0%, #0b1117 100%)",
-        //   border: "1px solid rgba(255, 255, 255, 0.1)",
-        //   borderRadius: "20px",
-        //   padding: "64px 48px",
-        //   position: "relative",
-        //   overflow: "hidden",
-        // }}
+      // style={{
+      //   background: "linear-gradient(180deg, #0e1723 0%, #0b1117 100%)",
+      //   border: "1px solid rgba(255, 255, 255, 0.1)",
+      //   borderRadius: "20px",
+      //   padding: "64px 48px",
+      //   position: "relative",
+      //   overflow: "hidden",
+      // }}
       >
         {/* Background pattern */}
         <div
@@ -437,53 +437,7 @@ export default function Home() {
           })}
         </div>
 
-        {/* CTA */}
-        <div
-          style={{
-            marginTop: "48px",
-            textAlign: "center",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <p
-            style={{
-              fontSize: "16px",
-              color: "#94a3b8",
-              marginBottom: "20px",
-            }}
-          >
-            Ready to help a stray in need?
-          </p>
-          <button
-            style={{
-              background: "#10b981",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "10px",
-              padding: "14px 32px",
-              fontSize: "16px",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-            }}
-            // onMouseEnter={(e) => {
-            //   e.target.style.background = "#059669";
-            //   e.target.style.transform = "translateY(-2px)";
-            //   e.target.style.boxShadow =
-            //     "0 6px 20px rgba(16, 185, 129, 0.4)";
-            // }}
-            // onMouseLeave={(e) => {
-            //   e.target.style.background = "#10b981";
-            //   e.target.style.transform = "translateY(0)";
-            //   e.target.style.boxShadow =
-            //     "0 4px 12px rgba(16, 185, 129, 0.3)";
-            // }}
-          >
-            Get Started Today
-          </button>
-        </div>
+      
       </section>
     </main>
   );

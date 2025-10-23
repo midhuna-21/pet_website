@@ -28,7 +28,7 @@ export default function Header() {
         }}>
           {/* Logo/Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ 
+            <div style={{
               fontSize: '2rem',
               filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.3))'
             }}>🐾</div>
@@ -59,9 +59,9 @@ export default function Header() {
             <NavLink href="/tasks">Tasks</NavLink>
             <NavLink href="/sos">SOS</NavLink>
             <NavLink href="/posters">Posters</NavLink>
-            <NavLink href="/campaign/pass-the-bowl">Campaign</NavLink>
+            <NavLink href="/campaign/pass-the-bowl">Pass the Bowl</NavLink>
             <NavLink href="/me">Profile</NavLink>
-            
+
             {/* Divider */}
             <div style={{
               height: '32px',
@@ -69,7 +69,7 @@ export default function Header() {
               background: 'linear-gradient(to bottom, transparent, rgba(251, 191, 36, 0.4), transparent)',
               margin: '0 0.5rem'
             }}></div>
-            
+
             {/* Management Dropdown */}
             <div style={{ position: 'relative' }}
               onMouseEnter={() => setManageDropdownOpen(true)}
@@ -89,16 +89,16 @@ export default function Header() {
                 cursor: 'pointer',
                 transition: 'all 0.3s'
               }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.15)';
-                e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.3)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.2)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}>
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}>
                 <BarChart3 size={16} />
                 <span>Manage</span>
                 <ChevronDown size={14} style={{
@@ -106,7 +106,7 @@ export default function Header() {
                   transform: manageDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
                 }} />
               </button>
-              
+
               {manageDropdownOpen && (
                 <div style={{
                   position: 'absolute',
@@ -124,10 +124,10 @@ export default function Header() {
                   overflow: 'hidden'
                 }}>
                   <DropdownLink href="/admin/stations" icon={<Building2 size={16} />}>Feeding Stations</DropdownLink>
-                  <DropdownLink href="/admin/moderation-covers" icon={<Shield size={16} />}>Content Moderation</DropdownLink>
-                  <DropdownLink href="/admin/stations-dashboard" icon={<BarChart3 size={16} />}>Analytics Dashboard</DropdownLink>
-                  <DropdownLink href="/admin/referrals-analytics" icon={<TrendingUp size={16} />}>Referral Analytics</DropdownLink>
-                  <DropdownLink href="/admin/cms-copy" icon={<FileEdit size={16} />}>Content Management</DropdownLink>
+                  <DropdownLink href="/admin/moderation-covers" icon={<Shield size={16} />}>Moderation</DropdownLink>
+                  <DropdownLink href="/admin/stations-dashboard" icon={<BarChart3 size={16} />}>Dashboard</DropdownLink>
+                  <DropdownLink href="/admin/referrals-analytics" icon={<TrendingUp size={16} />}>Referrals</DropdownLink>
+                  <DropdownLink href="/admin/cms-copy" icon={<FileEdit size={16} />}>CMS</DropdownLink>
                 </div>
               )}
             </div>
@@ -177,7 +177,7 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
+          <button
             style={{
               display: 'block',
               padding: '0.625rem',
@@ -204,41 +204,41 @@ export default function Header() {
           }} className="mobile-menu">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               <MobileNavLink href="/" icon=''>Home</MobileNavLink>
-              <MobileNavLink href="/report" icon=''>Report Stray</MobileNavLink>
-              <MobileNavLink href="/map" icon=''>Interactive Map</MobileNavLink>
-              <MobileNavLink href="/tasks" icon=''>Community Tasks</MobileNavLink>
-              <MobileNavLink href="/sos" icon=''>Emergency SOS</MobileNavLink>
-              <MobileNavLink href="/posters" icon=''>Lost & Found</MobileNavLink>
+              <MobileNavLink href="/report" icon=''>Report</MobileNavLink>
+              <MobileNavLink href="/map" icon=''>Map</MobileNavLink>
+              <MobileNavLink href="/tasks" icon=''>Tasks</MobileNavLink>
+              <MobileNavLink href="/sos" icon=''>SOS</MobileNavLink>
+              <MobileNavLink href="/posters" icon=''>Posters</MobileNavLink>
               <MobileNavLink href="/campaign/pass-the-bowl" icon=''>Pass the Bowl</MobileNavLink>
-              <MobileNavLink href="/me" icon=''>My Profile</MobileNavLink>
-              
+              <MobileNavLink href="/me" icon=''>Profile</MobileNavLink>
+
               <div style={{
                 height: '1px',
                 background: 'linear-gradient(to right, transparent, rgba(251, 191, 36, 0.3), transparent)',
                 margin: '0.75rem 0'
               }}></div>
-              
+
               <div style={{
                 fontSize: '0.75rem',
                 fontWeight: '700',
                 color: '#fbbf24',
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
-                padding: '0.5rem 1rem',
+                // padding: '0.5rem 1rem',
                 marginBottom: '0.25rem'
-              }}>Management Portal</div>
+              }}></div>
               <MobileNavLink href="/admin/stations" icon={<Building2 size={18} />}>Feeding Stations</MobileNavLink>
-              <MobileNavLink href="/admin/moderation-covers" icon={<Shield size={18} />}>Content Moderation</MobileNavLink>
-              <MobileNavLink href="/admin/stations-dashboard" icon={<BarChart3 size={18} />}>Analytics Dashboard</MobileNavLink>
-              <MobileNavLink href="/admin/referrals-analytics" icon={<TrendingUp size={18} />}>Referral Analytics</MobileNavLink>
-              <MobileNavLink href="/admin/cms-copy" icon={<FileEdit size={18} />}>Content Management</MobileNavLink>
-              
+              <MobileNavLink href="/admin/moderation-covers" icon={<Shield size={18} />}>Moderation</MobileNavLink>
+              <MobileNavLink href="/admin/stations-dashboard" icon={<BarChart3 size={18} />}>Dashboard</MobileNavLink>
+              <MobileNavLink href="/admin/referrals-analytics" icon={<TrendingUp size={18} />}>Referrals</MobileNavLink>
+              <MobileNavLink href="/admin/cms-copy" icon={<FileEdit size={18} />}>CMS</MobileNavLink>
+
               <div style={{
                 height: '1px',
                 background: 'linear-gradient(to right, transparent, rgba(251, 191, 36, 0.3), transparent)',
                 margin: '0.75rem 0'
               }}></div>
-              
+
               <button style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -296,7 +296,7 @@ export default function Header() {
 
 function NavLink({ href, children }) {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
     <a
       href={href}
@@ -323,7 +323,7 @@ function NavLink({ href, children }) {
 
 function DropdownLink({ href, icon, children }) {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
     <a
       href={href}
@@ -354,7 +354,7 @@ function DropdownLink({ href, icon, children }) {
 
 function MobileNavLink({ href, icon, children }) {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
     <a
       href={href}

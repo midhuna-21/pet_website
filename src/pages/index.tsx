@@ -55,174 +55,45 @@ export default function Home() {
           position: "relative",
         }}
       >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            alignItems: "center",
-            minHeight: "500px",
-            gap: "40px",
-          }}
-        >
+        <div className="hero-grid">
           {/* LEFT CONTENT */}
-          <div
-            style={{
-              padding: "48px",
-              zIndex: 2,
-              maxWidth: "700px",
-              margin: "0 auto",
-            }}
-          >
-            <h1
-              style={{
-                margin: "0 0 20px 0",
-                fontSize: "44px",
-                lineHeight: "1.2",
-                fontWeight: 700,
-                color: "#ffffff",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Because every stray deserves a friend
-            </h1>
-
-            <p
-              style={{
-                margin: "0 0 36px 0",
-                color: "#9fb3c8",
-                fontSize: "18px",
-                lineHeight: "1.7",
-                fontWeight: 400,
-              }}
-            >
-              Join thousands of animal lovers making a difference — one bowl at
-              a time. Report local strays, find feeding stations, and coordinate
-              care with your community.
+          <div className="hero-content">
+            <h1>Because every stray deserves a friend</h1>
+            <p>
+              Join thousands of animal lovers making a difference — one bowl at a
+              time. Report local strays, find feeding stations, and coordinate care
+              with your community.
             </p>
 
-            {/* CTA BUTTONS */}
-            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-              <Link
-                href="/report"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "14px 28px",
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: "#ffffff",
-                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                  border: "none",
-                  borderRadius: "10px",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 16px rgba(16, 185, 129, 0.3)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 8px 24px rgba(16, 185, 129, 0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow =
-                    "0 4px 16px rgba(16, 185, 129, 0.3)";
-                }}
-              >
+            <div className="cta-buttons">
+              <Link href="/report" className="primary-btn">
                 <span style={{ fontSize: "18px" }}>🐾</span> Report a Stray
               </Link>
 
-              <Link
-                href="/map"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "14px 28px",
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: "#ffffff",
-                  background: "transparent",
-                  border: "2px solid rgba(255,255,255,0.2)",
-                  borderRadius: "10px",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  backdropFilter: "blur(10px)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                <MapPin size={18} strokeWidth={2} />
-                Find Stations Near You
+              <Link href="/map" className="secondary-btn">
+                <MapPin size={18} strokeWidth={2} /> Find Stations Near You
               </Link>
             </div>
           </div>
 
           {/* RIGHT IMAGE */}
-          <div
-            style={{
-              position: "relative",
-              height: "100%",
-              minHeight: "500px",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                background:
-                  "linear-gradient(90deg, #0b1117 0%, rgba(11, 17, 23, 0.7) 50%, transparent 100%)",
-                zIndex: 1,
-              }}
-            ></div>
-
+          <div className="hero-image">
+            <div className="overlay"></div>
             <img
               src="/images/dog-paw-takes-man.webp"
               alt="Dog and human connection"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center",
-              }}
             />
           </div>
         </div>
       </section>
 
       {/* ---------------- HOW IT WORKS SECTION ---------------- */}
-      <section
-      // style={{
-      //   background: "linear-gradient(180deg, #0e1723 0%, #0b1117 100%)",
-      //   border: "1px solid rgba(255, 255, 255, 0.1)",
-      //   borderRadius: "20px",
-      //   padding: "64px 48px",
-      //   position: "relative",
-      //   overflow: "hidden",
-      // }}
-      >
+      <section style={{padding:'20px'}}>
         {/* Background pattern */}
         <div
           style={{
             position: "absolute",
+            
             top: 0,
             left: 0,
             right: 0,
@@ -371,7 +242,6 @@ export default function Home() {
                 >
                   <Icon size={28} style={{ color: step.color }} />
                 </div>
-
                 <h3
                   style={{
                     margin: "0 0 12px 0",
@@ -382,7 +252,6 @@ export default function Home() {
                 >
                   {step.title}
                 </h3>
-
                 <p
                   style={{
                     margin: "0 0 20px 0",
@@ -436,8 +305,6 @@ export default function Home() {
             );
           })}
         </div>
-
-      
       </section>
     </main>
   );

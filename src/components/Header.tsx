@@ -11,7 +11,7 @@ export default function Header() {
       top: 0,
       zIndex: 50,
       backdropFilter: 'blur(24px)',
-      backgroundColor: 'rgba(15, 23, 42, 0.98)',
+      // backgroundColor: 'rgba(15, 23, 42, 0.98)',
       borderBottom: '1px solid rgba(251, 191, 36, 0.2)',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)'
     }}>

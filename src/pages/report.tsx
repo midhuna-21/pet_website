@@ -2,12 +2,35 @@
 
 import { Camera, MapPin, Heart, Upload, X } from "lucide-react";
 import { useState } from "react";
+import GooglePlacesAutocomplete from '../hooks/useLoadGoogleMaps';
+import { db, storage } from '../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth } from '../lib/firebase';
 
 export default function ReportPage() {
   const [image, setImage] = useState(null);
-  const [petName, setPetName] = useState("");
   const [location, setLocation] = useState("");
+  const [petName, setPetName] = useState('');
+  const [petPhoto, setPetPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+
   const [hoveredButton, setHoveredButton] = useState(null);
+
+  const handleSelect = (place) => {
+    if (place.geometry && place.geometry.location) {
+      setSelectedLocation({
+        address: place.formatted_address,
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      });
+    } else {
+      setSelectedLocation({ address: place.formatted_address });
+    }
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -23,6 +46,51 @@ export default function ReportPage() {
   const removeImage = () => {
     setImage(null);
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log(auth.currentUser);
+    if (!petName || !petPhoto || !selectedLocation) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log('is that working propelry')
+      const storageRef = ref(storage, `pets/${Date.now()}_${petPhoto.name}`);
+      await uploadBytes(storageRef, petPhoto);
+      const photoURL = await getDownloadURL(storageRef);
+
+      console.log(photoURL, 'photoURL')
+      await addDoc(collection(db, 'pets'), {
+        name: petName,
+        photoURL: photoURL,
+        location: selectedLocation.address,
+        coordinates: {
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng,
+        },
+        createdAt: serverTimestamp(),
+      });
+
+      alert('🐾 Pet info saved successfully!');
+
+      setPetName('');
+      setPetPhoto(null);
+      setPhotoPreview(null);
+      setSelectedLocation(null);
+
+    } catch (err) {
+      console.error('Error saving pet data:', err);
+      alert('Error saving data: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -83,19 +151,20 @@ export default function ReportPage() {
               textTransform: "uppercase",
               letterSpacing: "0.5px",
             }}>
-              🐾 Help a Friend in Need
+              🐾 Let’s do something for the strays, yeah?
             </span>
           </div>
 
           <h1 style={{
             margin: "0 0 16px 0",
-            fontSize: "42px",
+            fontSize: "40px",
             fontWeight: 700,
             color: "#ffffff",
-            letterSpacing: "-0.5px",
+            letterSpacing: "-0.7px",
+            wordSpacing: "",
             lineHeight: "1.2",
           }}>
-            You're about to change a life
+            They’re smiling ‘cause of you.
           </h1>
 
           <p style={{
@@ -107,8 +176,7 @@ export default function ReportPage() {
             marginLeft: "auto",
             marginRight: "auto",
           }}>
-            Every stray you report brings them one step closer to safety, care, and love. 
-            Thank you for being their voice.
+            You turned a lonely moment into hope — that’s enough to make a difference.
           </p>
         </div>
 
@@ -122,34 +190,67 @@ export default function ReportPage() {
         }}>
           {/* Pet Name Field */}
           <div style={{ marginBottom: "32px" }}>
+
             <label style={{
-              display: "block",
-              marginBottom: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "14px",
               fontSize: "15px",
               fontWeight: 600,
               color: "#f1f5f9",
-              // display: "flex",
-              alignItems: "center",
-              gap: "8px",
             }}>
-              <Heart size={18} style={{ color: "#f59e0b" }} />
-              Give them a name (or a nickname!)
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                borderRadius: "6px",
+                background: "rgba(245, 158, 11, 0.15)",
+              }}>
+                <Heart size={14} style={{ color: "#f59e0b" }} />
+              </div>
+              <span>What would you like to call them?</span>
             </label>
-            <input
+
+            <div style={{ width: '100%' }}>
+              {/* Pet name input */}
+              <input
+                type="text"
+                placeholder="e.g., Fluffy, Buddy, Spot..."
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  // border: '1px solid rgba(71, 85, 105, 0.5)',
+                  // borderRadius: '12px',
+                  fontSize: '16px',
+                  color: '#ffffff',
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            {/* <input
               type="text"
               value={petName}
               onChange={(e) => setPetName(e.target.value)}
               placeholder="e.g., Fluffy, Buddy, Spot..."
               style={{
-                width: "100%",
-                padding: "14px 18px",
-                background: "rgba(15, 23, 42, 0.6)",
+                
+        width: '100%',
+        flex: 1,
+                  padding: "14px 18px",
+                  background: "rgba(15, 23, 42, 0.6)",
+                  fontSize: "16px",
+                  color: "#ffffff",
+                  outline: "none",
+                  transition: "all 0.3s ease",
+    
                 border: "1px solid rgba(71, 85, 105, 0.5)",
-                borderRadius: "12px",
-                fontSize: "16px",
-                color: "#ffffff",
-                outline: "none",
-                transition: "all 0.3s ease",
+                borderRadius: "12px", 
               }}
               onFocus={(e) => {
                 e.target.style.border = "1px solid #10b981";
@@ -159,7 +260,7 @@ export default function ReportPage() {
                 e.target.style.border = "1px solid rgba(71, 85, 105, 0.5)";
                 e.target.style.background = "rgba(15, 23, 42, 0.6)";
               }}
-            />
+            /> */}
             <p style={{
               marginTop: "8px",
               fontSize: "13px",
@@ -173,17 +274,26 @@ export default function ReportPage() {
           {/* Photo Upload */}
           <div style={{ marginBottom: "32px" }}>
             <label style={{
-              display: "block",
-              marginBottom: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "14px",
               fontSize: "15px",
               fontWeight: 600,
               color: "#f1f5f9",
-              // display: "flex",
-              alignItems: "center",
-              gap: "8px",
             }}>
-              <Camera size={18} style={{ color: "#3b82f6" }} />
-              Share a photo of your new friend
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                borderRadius: "6px",
+                background: "rgba(59, 130, 246, 0.15)",
+              }}>
+                <Camera size={14} style={{ color: "#3b82f6" }} />
+              </div>
+              <span>Share a photo of your new friend</span>
             </label>
 
             {!image ? (
@@ -197,14 +307,14 @@ export default function ReportPage() {
                 cursor: "pointer",
                 transition: "all 0.3s ease",
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.border = "2px dashed #10b981";
-                e.currentTarget.style.background = "rgba(16, 185, 129, 0.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.border = "2px dashed rgba(71, 85, 105, 0.5)";
-                e.currentTarget.style.background = "rgba(15, 23, 42, 0.6)";
-              }}>
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.border = "2px dashed #10b981";
+                  e.currentTarget.style.background = "rgba(16, 185, 129, 0.05)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.border = "2px dashed rgba(71, 85, 105, 0.5)";
+                  e.currentTarget.style.background = "rgba(15, 23, 42, 0.6)";
+                }}>
                 <input
                   type="file"
                   accept="image/*"
@@ -270,69 +380,32 @@ export default function ReportPage() {
           {/* Location Field */}
           <div style={{ marginBottom: "40px" }}>
             <label style={{
-              display: "block",
-              marginBottom: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "14px",
               fontSize: "15px",
               fontWeight: 600,
               color: "#f1f5f9",
-              // display: "flex",
-              alignItems: "center",
-              gap: "8px",
             }}>
-              <MapPin size={18} style={{ color: "#10b981" }} />
-              Where did you meet them?
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                borderRadius: "6px",
+                background: "rgba(16, 185, 129, 0.15)",
+              }}>
+                <MapPin size={14} style={{ color: "#10b981" }} />
+              </div>
+              <span>Where did you meet them?</span>
             </label>
+
             <div style={{ display: "flex", gap: "12px" }}>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Enter address or coordinates..."
-                style={{
-                  flex: 1,
-                  padding: "14px 18px",
-                  background: "rgba(15, 23, 42, 0.6)",
-                  border: "1px solid rgba(71, 85, 105, 0.5)",
-                  borderRadius: "12px",
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  outline: "none",
-                  transition: "all 0.3s ease",
-                }}
-                onFocus={(e) => {
-                  e.target.style.border = "1px solid #10b981";
-                  e.target.style.background = "rgba(15, 23, 42, 0.8)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.border = "1px solid rgba(71, 85, 105, 0.5)";
-                  e.target.style.background = "rgba(15, 23, 42, 0.6)";
-                }}
-              />
-              <button
-                onClick={getCurrentLocation}
-                style={{
-                  padding: "14px 20px",
-                  background: "rgba(16, 185, 129, 0.15)",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
-                  borderRadius: "12px",
-                  color: "#10b981",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(16, 185, 129, 0.25)";
-                  e.currentTarget.style.transform = "scale(1.05)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(16, 185, 129, 0.15)";
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
-              >
-                Use My Location
-              </button>
+
+              <GooglePlacesAutocomplete onSelect={handleSelect} />
+
             </div>
             <p style={{
               marginTop: "8px",
@@ -386,7 +459,7 @@ export default function ReportPage() {
               color: "#cbd5e1",
               lineHeight: "1.6",
             }}>
-              💚 Your kindness matters. By reporting this stray, you're connecting them with 
+              💚 Your kindness matters. By reporting this stray, you're connecting them with
               local volunteers who can provide food, medical care, and maybe even a forever home.
             </p>
           </div>

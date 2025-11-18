@@ -100,11 +100,11 @@ export default function Header() {
             Report
           </HeaderLink>
           <HeaderLink
-            href="/spotted"
+            href="/strays"
             user={user}
             setShowAuthModal={setShowAuthModal}
           >
-            Spotted
+            Strays
           </HeaderLink>
           <HeaderLink
             href="/community"

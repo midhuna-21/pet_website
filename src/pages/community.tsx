@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import AuthModal from "../components/AuthModal";
+import Header from "../components/Header";
 
 export default function CommunityPage() {
   const [authUser, setAuthUser] = useState<any>(null);
@@ -227,6 +228,7 @@ export default function CommunityPage() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#0a0f1a", color: "#fff", padding: 20 }}>
+      <Header />
       <div style={{ maxWidth: 1200, margin: "0 auto", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Users size={32} color="#10b981" />

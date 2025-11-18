@@ -7,8 +7,9 @@ import { db, storage, auth } from "../lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged } from "firebase/auth";
-import LoginWidget from "../components/LoginWidget"; 
+import LoginWidget from "../components/LoginWidget";
 import AuthModal from "../components/AuthModal";
+
 
 interface FormErrors {
   petName?: string;
@@ -36,6 +37,10 @@ export default function ReportPage() {
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  const handleSelectLocation = (place: any) => {
+    console.log("User selected location:", place);
+  };
+
   useEffect(() => {
     if (showSuccessModal) {
       const timer = setTimeout(() => setShowSuccessModal(false), 3000);
@@ -49,7 +54,6 @@ export default function ReportPage() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ Close login modal after login
   useEffect(() => {
     if (user && showLoginModal) setShowLoginModal(false);
   }, [user, showLoginModal]);
@@ -186,7 +190,7 @@ export default function ReportPage() {
         position: "relative",
       }}
     >
-      {/* ✅ Login Modal */}
+
       {showAuthModal && (
         <div
           style={{
@@ -201,12 +205,11 @@ export default function ReportPage() {
           onClick={() => setShowAuthModal(false)}
         >
           <div onClick={(e) => e.stopPropagation()}>
-            <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
+            <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} onSelect={handleSelectLocation} />
           </div>
         </div>
       )}
 
-      {/* Background pattern */}
       <div
         style={{
           position: "fixed",
@@ -219,7 +222,6 @@ export default function ReportPage() {
       />
 
       <div style={{ maxWidth: "700px", margin: "0 auto", position: "relative", zIndex: 1 }}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
           <div
             style={{
@@ -266,7 +268,6 @@ export default function ReportPage() {
           </p>
         </div>
 
-        {/* Form */}
         <form
           onSubmit={handleSubmit}
           style={{
@@ -277,7 +278,6 @@ export default function ReportPage() {
             backdropFilter: "blur(10px)",
           }}
         >
-          {/* Pet Name */}
           <div style={{ marginBottom: "32px" }}>
             <label
               style={{
@@ -339,7 +339,6 @@ export default function ReportPage() {
             )}
           </div>
 
-          {/* Photo Upload */}
           <div style={{ marginBottom: "32px" }}>
             <label
               style={{
@@ -562,12 +561,7 @@ export default function ReportPage() {
           </div>
         </div>
       )}
-
-
-
     </div>
-
-
   );
 }
 

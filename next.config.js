@@ -39,6 +39,7 @@ const csp = process.env.NODE_ENV === 'production' ? CSP_PROD : CSP_DEV
 
 const nextConfig = {
   reactStrictMode: false,
+    output: 'export',
   async headers() {
     const reportTo = JSON.stringify({
       group: 'csp-endpoint',

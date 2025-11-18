@@ -120,13 +120,13 @@ export default function Header() {
           >
             Tasks
           </HeaderLink>
-          <HeaderLink
+          {/* <HeaderLink
             href="/stations"
             user={user}
             setShowAuthModal={setShowAuthModal}
           >
             Stations
-          </HeaderLink>
+          </HeaderLink> */}
           <HeaderLink
             href="/pass-the-bowl"
             user={user}
@@ -134,7 +134,13 @@ export default function Header() {
           >
             Pass the Bowl
           </HeaderLink>
-
+            <HeaderLink
+            href="/dashboard"
+            user={user}
+            setShowAuthModal={setShowAuthModal}
+          >
+            Dashboard
+          </HeaderLink>
           <LoginWidget />
         </nav>
 

@@ -216,7 +216,7 @@ export default function CommunityPage() {
         minHeight: "100vh",
         background: "#000",
         color: "#fff",
-        padding: "40px 20px",
+        // padding: "40px 20px",
       }}
     >
       <Header />
@@ -319,7 +319,6 @@ export default function CommunityPage() {
                 >
                   <div>
                     <div style={{ fontWeight: 600 }}>{u.name}</div>
-                    <div style={{ fontSize: 12, opacity: 0.5 }}>Tap to chat</div>
                   </div>
 
                   <MessageCircle size={20} color="var(--gold-light)" />
@@ -429,8 +428,14 @@ export default function CommunityPage() {
                         }}
                       >
                         {m.createdAt?.toDate
-                          ? new Date(m.createdAt.toDate()).toLocaleString()
+                          ? new Date(m.createdAt.toDate()).toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                            timeZone: "Asia/Kolkata",
+                          })
                           : ""}
+
                       </div>
                     </div>
                   </div>

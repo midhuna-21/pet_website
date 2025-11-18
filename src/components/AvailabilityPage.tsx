@@ -1,176 +1,256 @@
-  import { useState } from "react";
-  import { updateAvailability } from "../hooks/firestoreaction";
-import { useRouter } from "next/navigation";
+"use client";
 
-  export default function AvailabilityPage({
-    setCurrentPage,
-    userAvailability,
-    setUserAvailability,
-    requests,
-  }) {
-    const [formData, setFormData] = useState({
-      location: "",
-      radius: "",
+import React, { useState, useEffect } from "react";
+import { MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { updateAvailability } from "../hooks/firestoreaction";
+
+export default function AvailabilityPage({
+  setCurrentPage,
+  userAvailability,
+  setUserAvailability,
+  requests,
+}) {
+  const router = useRouter();
+
+  // ✅ SAFE INITIAL EMPTY STATE (fixes undefined reading)
+  const [formData, setFormData] = useState({
+    location: "",
+    radius: "",
+  });
+
+  // ✅ UPDATE WHEN userAvailability BECOMES AVAILABLE
+  useEffect(() => {
+    if (userAvailability) {
+      setFormData({
+        location: userAvailability.location || "",
+        radius: userAvailability.radius || "",
+      });
+    }
+  }, [userAvailability]);
+
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // GO ONLINE
+  const handleGoOnline = async () => {
+    if (!formData.location || !formData.radius) {
+      alert("Please enter location and radius");
+      return;
+    }
+
+    setSaving(true);
+
+    await updateAvailability({
+      isAvailable: true,
+      location: formData.location,
+      radius: formData.radius,
     });
 
-    const router = useRouter(); 
-    const [showForm, setShowForm] = useState(false);
+    setUserAvailability({
+      isAvailable: true,
+      location: formData.location,
+      radius: formData.radius,
+    });
 
-    // ============== HANDLE GO ONLINE ==================
-    const handleGoOnline = async () => {
-      if (!formData.location || !formData.radius) {
-        alert("Please enter location and radius");
-        return;
-      }
+    setSaving(false);
+    setShowForm(false);
+  };
 
-      // Update global state
-      setUserAvailability({
-        isAvailable: true,
-        location: formData.location,
-        radius: formData.radius,
-      });
+  // GO OFFLINE
+  const handleGoOffline = async () => {
+    setSaving(true);
 
-      // Save to Firestore
-      await updateAvailability({
-        isAvailable: true,
-        location: formData.location,
-        radius: formData.radius,
-      });
+    await updateAvailability({
+      isAvailable: false,
+      location: userAvailability.location,
+      radius: userAvailability.radius,
+    });
 
-      setShowForm(false); // Hide form
-    };
+    setUserAvailability({
+      ...userAvailability,
+      isAvailable: false,
+    });
 
-    // ============== HANDLE GO OFFLINE ==================
-    const handleGoOffline = async () => {
-      setUserAvailability((prev) => ({
-        ...prev,
-        isAvailable: false,
-      }));
+    setSaving(false);
+  };
 
-      await updateAvailability({
-        isAvailable: false,
-        location: userAvailability.location,
-        radius: userAvailability.radius,
-      });
-    };
+  const pendingCount =
+    requests?.filter((r) => r.status === "pending")?.length || 0;
 
-    return (
-      <div style={{ maxWidth: 600, margin: "0 auto" }}>
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#000",
+        color: "#fff",
+        padding: "40px 20px",
+        marginTop: "80px",
+        marginBottom: "50px",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        {/* PAGE TITLE */}
+        <div style={{ marginBottom: 40 }}>
+          <h1
+            style={{
+              fontFamily: "Playfair Display",
+              fontSize: 42,
+              fontWeight: 700,
+              margin: 0,
+            }}
+          >
+            Availability
+          </h1>
+
+          <p
+            style={{
+              color: "rgba(255,255,255,0.55)",
+              marginTop: 10,
+              maxWidth: 600,
+              lineHeight: 1.6,
+            }}
+          >
+            Set your availability so nearby people can request your help for
+            stray animals.
+          </p>
+        </div>
+
+        {/* CARD */}
         <div
           style={{
-            backgroundColor: "#1e293b",
-            border: "1px solid #334155",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 16,
             padding: 24,
-            marginBottom: 20,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
           }}
         >
-          <h2 style={{ fontSize: 24, fontWeight: "bold" }}>
-            Your Availability Status
-          </h2>
-
-          {/* STATUS CARD */}
+          {/* STATUS ROW */}
           <div
             style={{
-              backgroundColor: userAvailability.isAvailable ? "#10b98120" : "#0f172a",
-              border: `2px solid ${
-                userAvailability.isAvailable ? "#10b981" : "#334155"
-              }`,
-              padding: 20,
-              borderRadius: 12,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginBottom: 20,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  background: userAvailability.isAvailable
+                    ? "#d8c48d"
+                    : "#64748b",
+                }}
+              ></div>
+              <div>
                 <div
                   style={{
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    backgroundColor: userAvailability.isAvailable
-                      ? "#10b981"
-                      : "#64748b",
-                  }}
-                />
-
-                <span
-                  style={{
                     fontSize: 18,
-                    fontWeight: 600,
-                    color: userAvailability.isAvailable ? "#10b981" : "#94a3b8",
+                    fontWeight: 700,
+                    color: userAvailability.isAvailable
+                      ? "#d8c48d"
+                      : "rgba(255,255,255,0.6)",
                   }}
                 >
-                  {userAvailability.isAvailable ? "Online" : "Offline"}
-                </span>
-              </div>
+                  {userAvailability.isAvailable ? "You Are Online" : "You Are Offline"}
+                </div>
 
-              {/* Online / Offline Button */}
-              {!userAvailability.isAvailable ? (
-                <button
-                  onClick={() => setShowForm(true)}
+                <div
                   style={{
-                    padding: "8px 20px",
-                    backgroundColor: "#10b981",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 8,
-                    cursor: "pointer",
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.35)",
+                    marginTop: 4,
                   }}
                 >
-                  Go Online
-                </button>
-              ) : (
-                <button
-                  onClick={handleGoOffline}
-                  style={{
-                    padding: "8px 20px",
-                    backgroundColor: "#ef4444",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                  }}
-                >
-                  Go Offline
-                </button>
-              )}
+                  {userAvailability.isAvailable
+                    ? `${userAvailability.location} • ${userAvailability.radius}`
+                    : "Go online to appear for helpers near you"}
+                </div>
+              </div>
             </div>
+
+            {/* BUTTONS */}
+            {userAvailability.isAvailable ? (
+              <button
+                onClick={handleGoOffline}
+                disabled={saving}
+                style={{
+                  padding: "10px 18px",
+                  background: "#0f172a",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 10,
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                {saving ? "Saving..." : "Go Offline"}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowForm(true)}
+                style={{
+                  padding: "10px 18px",
+                  background: "linear-gradient(135deg,#b89c58,#d8c48d)",
+                  color: "#000",
+                  border: "none",
+                  borderRadius: 10,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Go Online
+              </button>
+            )}
           </div>
 
-          {/* ========== ONLINE FORM ========== */}
+          {/* ONLINE FORM */}
           {showForm && !userAvailability.isAvailable && (
             <div
               style={{
-                backgroundColor: "#0f172a",
-                padding: 20,
+                // padding: 20,
                 borderRadius: 12,
-                border: "1px solid #334155",
                 marginBottom: 20,
+                marginTop: 10,
               }}
             >
-              <h3 style={{ marginBottom: 10 }}>Go Online</h3>
-
-              <label>Location</label>
-              <input
-                type="text"
-                placeholder="Enter your location"
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
+              <label style={{ fontSize: 14 }}>Location</label>
+              <div
                 style={{
-                  width: "100%",
-                  padding: 12,
-                  marginTop: 8,
-                  backgroundColor: "#1e293b",
-                  borderRadius: 8,
-                  border: "1px solid #334155",
-                  color: "white",
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  marginTop: 6,
                 }}
-              />
+              >
+                {/* <MapPin size={16} color="#d8c48d" /> */}
+                <input
+                  type="text"
+                  placeholder="Enter your location"
+                  value={formData.location}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: 10,
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#fff",
+                  }}
+                />
+              </div>
 
-              <label style={{ marginTop: 16, display: "block" }}>Radius</label>
+              <label style={{ marginTop: 16, display: "block", fontSize: 14 }}>
+                Radius
+              </label>
+
               <select
                 value={formData.radius}
                 onChange={(e) =>
@@ -178,97 +258,132 @@ import { useRouter } from "next/navigation";
                 }
                 style={{
                   width: "100%",
-                  padding: 12,
-                  marginTop: 8,
-                  backgroundColor: "#1e293b",
-                  borderRadius: 8,
-                  border: "1px solid #334155",
-                  color: "white",
-                }}
-              >
-                <option value="">Select radius</option>
-                <option>2km</option>
-                <option>5km</option>
-                <option>10km</option>
-                <option>15km</option>
-              </select>
-
-              <button
-                onClick={handleGoOnline}
-                style={{
-                  marginTop: 16,
-                  width: "100%",
-                  padding: 14,
-                  backgroundColor: "#10b981",
-                  color: "white",
+                  padding: "12px",
                   borderRadius: 10,
-                  border: "none",
+                  background: "rgba(255,255,255,0.08)",   // DARK BACKGROUND
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: "#fff",
+                  marginTop: 6,
+                  appearance: "none",
                   cursor: "pointer",
                 }}
               >
-                Confirm & Go Online
-              </button>
+                <option value="2km" style={{ background: "#000" }}>2 km</option>
+                <option value="5km" style={{ background: "#000" }}>5 km</option>
+                <option value="10km" style={{ background: "#000" }}>10 km</option>
+                <option value="15km" style={{ background: "#000" }}>15 km</option>
+              </select>
+
+              {/* BUTTONS */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 12,
+                  marginTop: 20,
+                }}
+              >
+                {/* Cancel */}
+                <button
+                  onClick={() => setShowForm(false)}
+                  style={{
+                    padding: 14,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "#fff",
+                    borderRadius: 10,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+
+                {/* Confirm */}
+                <button
+                  onClick={handleGoOnline}
+                  disabled={saving}
+                  style={{
+                    padding: 14,
+                    background: "rgba(255,255,255,0.1)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#fff",
+                    borderRadius: 10,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {saving ? "Saving..." : "Confirm"}
+                </button>
+              </div>
             </div>
           )}
 
-          {/* BUTTONS */}
-          <div
+
+        </div>
+        {/* ACTION BUTTONS */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 12,
+            marginTop: 12,
+          }}
+        >
+          <button
+            onClick={() => router.push("/available-helpers")}
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 12,
-              marginTop: 20,
+              padding: 14,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#fff",
+              borderRadius: 12,
+              cursor: 'pointer',
+              fontWeight: 600,
             }}
           >
-            <button
-              onClick={() => setCurrentPage("available-helpers")}
-              style={{
-                padding: 16,
-                backgroundColor: "#10b981",
-                borderRadius: 12,
-                color: "white",
-                fontSize: 16,
-              }}
-            >
-              Find Helpers
-            </button>
+            Find Helpers
+          </button>
 
-            <button
-          
-              onClick={() => router.push("/requests")}
-              style={{
-                padding: 16,
-                backgroundColor: "#0f172a",
-                borderRadius: 12,
-                border: "1px solid #334155",
-                color: "white",
-                fontSize: 16,
-                position: "relative",
-              }}
-            >
-              My Requests
-              {requests.filter((r) => r.status === "pending").length > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: -8,
-                    right: -8,
-                    background: "#ef4444",
-                    width: 24,
-                    height: 24,
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                  }}
-                >
-                  {requests.filter((r) => r.status === "pending").length}
-                </span>
-              )}
-            </button>
-          </div>
+          <button
+            onClick={() => router.push("/requests")}
+            style={{
+              padding: 14,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#fff",
+              borderRadius: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              position: "relative",
+            }}
+          >
+            My Requests
+            {pendingCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -8,
+                  right: -8,
+                  background: "#ef4444",
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  border: "2px solid #000",
+                }}
+              >
+                {pendingCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}

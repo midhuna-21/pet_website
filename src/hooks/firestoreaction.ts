@@ -7,7 +7,7 @@ import {
   serverTimestamp,
   onSnapshot,
   setDoc,
-   getDocs, query, where
+   getDocs, query, where,getDoc
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -20,10 +20,51 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 //   });
 // };
 
+// export const getAvailableHelpers = async () => {
+//   const uid = auth.currentUser?.uid;
+
+//   // 1. Get available users
+//   const q = query(
+//     collection(db, "availability"),
+//     where("isAvailable", "==", true)
+//   );
+
+//   const snapshot = await getDocs(q);
+
+//   let availabilityList = snapshot.docs.map(doc => ({
+//     id: doc.id,
+//     ...doc.data(),
+//   }));
+
+//   // Remove current user
+//   availabilityList = availabilityList.filter((h) => h.id !== uid);
+
+//   console.log(availabilityList,'availity')
+//   // 2. Fetch profile for each helper
+//   const helpersWithProfile = await Promise.all(
+//     availabilityList.map(async (helper) => {
+//       const userDoc = await getDocs(
+//         query(collection(db, "users"), where("__name__", "==", helper.id))
+//       );
+
+//       let profile = userDoc.docs[0]?.data() || {};
+
+//       return {
+//         ...helper,
+//         ...profile,         // Merge user profile into helper data
+//       };
+//     })
+
+//   );
+
+//   return helpersWithProfile;
+// };
+
+
 export const getAvailableHelpers = async () => {
   const uid = auth.currentUser?.uid;
 
-  // 1. Get available users
+  // 1. Get all available users
   const q = query(
     collection(db, "availability"),
     where("isAvailable", "==", true)
@@ -32,34 +73,34 @@ export const getAvailableHelpers = async () => {
   const snapshot = await getDocs(q);
 
   let availabilityList = snapshot.docs.map(doc => ({
-    id: doc.id,
+    id: doc.id,           // user UID
     ...doc.data(),
   }));
 
-  // Remove current user
-  availabilityList = availabilityList.filter((h) => h.id !== uid);
+  // Filter out current user safely
+  availabilityList = availabilityList.filter(
+    (h) => h.id && h.id !== uid
+  );
 
-  console.log(availabilityList,'availity')
-  // 2. Fetch profile for each helper
+  // 2. Fetch profile for each helper safely
   const helpersWithProfile = await Promise.all(
     availabilityList.map(async (helper) => {
-      const userDoc = await getDocs(
-        query(collection(db, "users"), where("__name__", "==", helper.id))
-      );
+      if (!helper.id) return helper; // Avoid undefined crash
 
-      let profile = userDoc.docs[0]?.data() || {};
+      const userRef = doc(db, "users", helper.id);
+      const userSnap = await getDoc(userRef);
+
+      const profile = userSnap.exists() ? userSnap.data() : {};
 
       return {
         ...helper,
-        ...profile,         // Merge user profile into helper data
+        ...profile,
       };
     })
-
   );
 
   return helpersWithProfile;
 };
-
 
 export const updateAvailability = async (data) => {
   const uid = auth.currentUser?.uid;

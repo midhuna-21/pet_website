@@ -6,6 +6,7 @@ import SendRequestPage from "../components/SendRequestsPage";
 import RequestsPage from "../components/RequestsPage";
 
 import { useRouter } from "next/router";
+import Header from "../components/Header";
 
 export default function PassTheBowlSystem() {
   const router = useRouter();
@@ -44,12 +45,11 @@ export default function PassTheBowlSystem() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#0a0f1a",
         color: "white",
-        padding: 20,
       }}
     >
 
+<Header />
       {/* Availability */}
       {currentPage === "availability" && (
         <AvailabilityPage

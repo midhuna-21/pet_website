@@ -9,7 +9,7 @@ export default function RequestsRoute() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await getIncomingRequests();  // 🔥🔥 fetch requests where receiverId == currentUser.uid
+      const data = await getIncomingRequests();  
       setRequests(data);
       setLoading(false);
     };

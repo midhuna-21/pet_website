@@ -160,7 +160,7 @@ export default function LoginWidget() {
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 8 }}>
-              <Link className="cta" href="/me">My Profile</Link>
+              {/* <Link className="cta" href="/me">My Profile</Link> */}
               <button className="cta ghost" onClick={() => signOut(auth)}>Sign out</button>
             </div>
           )}

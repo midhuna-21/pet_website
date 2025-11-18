@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { MessageSquare } from "lucide-react";
 
-import AvailabilityPage from "./AvailabilityPage";
-import SendRequestPage from "./SendRequestsPage";
-import RequestsPage from "./RequestsPage";
+import AvailabilityPage from "../components/AvailabilityPage";
+import SendRequestPage from "../components/SendRequestsPage";
+import RequestsPage from "../components/RequestsPage";
 
 import { useRouter } from "next/router";
 

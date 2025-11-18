@@ -4,7 +4,7 @@ import Link from "next/link";
 import { MapPin, Camera, Heart } from "lucide-react";
 import { useState } from "react";
 import Header from "../components/Header";
-import HowItWorks from "./HowItWorks";
+import HowItWorks from "../components/HowItWorks";
 
 export default function Home() {
   const [hoveredCard, setHoveredCard] = useState(null);

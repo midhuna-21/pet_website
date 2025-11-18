@@ -1,8 +1,8 @@
 // pages/available-helpers.jsx
 import { useEffect, useState } from "react";
-import AvailableHelpersPageUI from "./AvailableHelpersPage";
+import AvailableHelpersPageUI from "../components/AvailableHelpersPage";
 import { getAvailableHelpers } from "../hooks/firestoreaction";
-import SendRequestModal from "./SendRequestModal";
+import SendRequestModal from "../components/SendRequestModal";
 
 export default function AvailableHelpersRoute() {
   const [availableHelpers, setAvailableHelpers] = useState([]);

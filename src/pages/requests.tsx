@@ -1,6 +1,6 @@
 // pages/requests.jsx
 import { useEffect, useState } from "react";
-import RequestsPageUI from "./RequestsPage";
+import RequestsPageUI from "../components/RequestsPage";
 import { getIncomingRequests, updateRequestStatus } from "../hooks/firestoreaction";
 
 export default function RequestsRoute() {

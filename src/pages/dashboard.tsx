@@ -105,7 +105,7 @@ export default function Dashboard() {
           title: "Declined",
           value: totalDeclined,
         }].map((card, idx) => (
-          <div key={idx} style={smallCard}>
+          <div key={idx} >
             <span style={{ fontWeight: "600", opacity: 0.8 }}>{card.title}</span>
             <span style={{ fontSize: "18px", fontWeight: "bold" }}>{card.value}</span>
           </div>

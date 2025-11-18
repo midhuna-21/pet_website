@@ -27,7 +27,6 @@ export default function CommunityPage() {
   const [users, setUsers] = useState<Array<{ id: string; name?: string }>>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [connections, setConnections] = useState<string[]>([]);
 
   const [selectedUser, setSelectedUser] = useState<{ id: string; name?: string } | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -40,20 +39,16 @@ export default function CommunityPage() {
 
   const handleScroll = () => {
     if (!messagesScrollRef.current) return;
-
     const { scrollTop, scrollHeight, clientHeight } = messagesScrollRef.current;
-    // if near the bottom, consider at bottom
     setIsAtBottom(scrollTop + clientHeight >= scrollHeight - 20);
   };
 
-  // Auto-scroll when new messages arrive
   useEffect(() => {
     if (isAtBottom && messagesScrollRef.current) {
       messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
     }
   }, [messages, isAtBottom]);
 
-  // -------------------- Real-time messages listener --------------------
   const startListeningMessages = (cId: string) => {
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
@@ -63,24 +58,18 @@ export default function CommunityPage() {
     const messagesRef = collection(db, `chats/${cId}/messages`);
     const q = query(messagesRef, orderBy("createdAt", "asc"));
 
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-        setMessages(docs);
+    const unsub = onSnapshot(q, (snap) => {
+      const docs = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      setMessages(docs);
 
-        // Auto-scroll
-        if (messagesScrollRef.current) {
-          messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
-        }
-      },
-      (err) => console.error("messages onSnapshot error:", err)
-    );
+      if (messagesScrollRef.current) {
+        messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
+      }
+    });
 
     unsubscribeRef.current = unsub;
   };
 
-  // -------------------- Open chat with a user --------------------
   const openChatWith = async (otherUser: { id: string; name?: string }) => {
     if (!loggedInUser) {
       setShowAuthModal(true);
@@ -115,7 +104,6 @@ export default function CommunityPage() {
         return;
       }
 
-      // Create new chat
       const newChatRef = await addDoc(collection(db, "chats"), {
         members: [loggedInUser.id, otherUser.id],
         lastMessage: "",
@@ -130,11 +118,10 @@ export default function CommunityPage() {
     }
   };
 
-  // -------------------- Send a message --------------------
   const sendMessage = async () => {
-    if (!chatId || !messageText.trim() || !loggedInUser || !selectedUser) return;
-    const text = messageText.trim();
+    if (!chatId || !messageText.trim() || !loggedInUser) return;
 
+    const text = messageText.trim();
     setMessageText("");
 
     try {
@@ -154,7 +141,6 @@ export default function CommunityPage() {
     }
   };
 
-  // -------------------- Auth listener --------------------
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -166,17 +152,14 @@ export default function CommunityPage() {
         setAuthUser(u);
         setShowAuthModal(false);
         try {
-          const userDocRef = doc(db, "users", u.uid);
-          const userSnap = await getDoc(userDocRef);
-          if (userSnap.exists()) {
-            const data = userSnap.data() as any;
-            setLoggedInUser({ id: u.uid, name: data.name || u.displayName || u.email || "User" });
+          const snap = await getDoc(doc(db, "users", u.uid));
+          if (snap.exists()) {
+            setLoggedInUser({ id: u.uid, name: snap.data().name || "User" });
           } else {
-            setLoggedInUser({ id: u.uid, name: u.displayName || u.email || "User" });
+            setLoggedInUser({ id: u.uid, name: "User" });
           }
-        } catch (err) {
-          console.error("Failed to load user profile:", err);
-          setLoggedInUser({ id: u.uid, name: u.displayName || u.email || "User" });
+        } catch {
+          setLoggedInUser({ id: u.uid, name: "User" });
         }
       }
     });
@@ -184,7 +167,6 @@ export default function CommunityPage() {
     return () => unsubscribe();
   }, []);
 
-  // -------------------- Fetch users --------------------
   useEffect(() => {
     const fetchUsers = async () => {
       setLoadingUsers(true);
@@ -194,103 +176,261 @@ export default function CommunityPage() {
           .map((d) => ({ id: d.id, ...(d.data() as any) }))
           .filter((u) => u.id !== loggedInUser?.id);
         setUsers(list);
-      } catch (err) {
-        console.error("Error fetching users:", err);
       } finally {
         setLoadingUsers(false);
       }
     };
+
     if (loggedInUser) fetchUsers();
   }, [loggedInUser]);
-
 
   const filteredUsers = users.filter((u) =>
     (u.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // -------------------- Cleanup listener on unmount --------------------
   useEffect(() => {
     return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
-      }
+      if (unsubscribeRef.current) unsubscribeRef.current();
     };
   }, []);
 
   if (!loggedInUser) {
     return (
-      <div style={{ height: "100vh", backgroundColor: "#0a0f1a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div
+        style={{
+          height: "100vh",
+          background: "#000",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <AuthModal open={true} onClose={() => { }} onSelect={() => { }} />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#0a0f1a", color: "#fff", padding: 20 }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#000",
+        color: "#fff",
+        padding: "40px 20px",
+      }}
+    >
       <Header />
-      <div style={{ maxWidth: 1200, margin: "0 auto", marginBottom: 20 }}>
+
+      {/* TOP SECTION */}
+      <div
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          marginTop: "80px",
+          marginBottom: "50px",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Users size={32} color="#10b981" />
-          <h1 style={{ fontSize: 28, fontWeight: 700 }}>Community</h1>
+          <Users size={32} color="var(--gold-light)" />
+          <h1 style={{ fontSize: "42px", fontFamily: "Playfair Display" }}>
+            Community Chats
+          </h1>
         </div>
+
+        <p
+          style={{
+            marginTop: 10,
+            fontSize: 17,
+            color: "rgba(255,255,255,0.55)",
+            maxWidth: 500,
+          }}
+        >
+          Let’s look out for our little strays together.<br />
+          Share a sighting to help someone reach them. ❤️
+        </p>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "360px 1fr", gap: 20 }}>
-        {/* -------------------- Members list -------------------- */}
-        <div style={{ background: "#071023", borderRadius: 14, padding: 16, height: "78vh", overflow: "auto" }}>
-          <input
-            placeholder="Search members..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: "100%", padding: 10, borderRadius: 10, background: "#0f1724", border: "1px solid #263243", color: "#fff" }}
-          />
-          <div style={{ marginTop: 12 }}>
+      {/* MAIN GRID */}
+      <div
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "340px 1fr",
+          gap: "28px",
+        }}
+      >
+        {/* LEFT PANEL */}
+        {/* LEFT PANEL */}
+        <div
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "18px",
+            padding: "20px",
+            height: "78vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",             // ★ prevents inner overflow
+          }}
+        >
+          {/* FIXED SEARCH INPUT */}
+          <div style={{ width: "100%", marginBottom: "14px" }}>
+            <input
+              placeholder="Search members..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#fff",
+                fontSize: "14px",
+                boxSizing: "border-box",     // ★ ensures perfect inside-fit
+                outline: "none",
+              }}
+            />
+          </div>
+
+          {/* MEMBERS LIST */}
+          <div style={{ overflowY: "auto", flex: 1 }}>
             {loadingUsers ? (
-              <div style={{ color: "#94a3b8" }}>Loading members...</div>
+              <div style={{ color: "#999" }}>Loading members...</div>
             ) : filteredUsers.length === 0 ? (
-              <div style={{ color: "#94a3b8" }}>No members found</div>
+              <div style={{ color: "#777" }}>No members found</div>
             ) : (
               filteredUsers.map((u) => (
-                <div key={u.id} style={{ marginTop: 12, background: "#0f1724", padding: 12, borderRadius: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div><div style={{ fontWeight: 600 }}>{u.name}</div></div>
+                <div
+                  key={u.id}
+                  onClick={() => openChatWith(u)}
+                  style={{
+                    padding: "14px",
+                    marginBottom: "12px",
+                    borderRadius: "12px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    cursor: "pointer",
+                    transition: "0.25s",
+                  }}
+                >
                   <div>
-                    <button title="Open chat" onClick={() => openChatWith(u)} style={{ padding: 8, background: "#071023", border: "1px solid #263243", borderRadius: 8 }}>
-                      <MessageCircle size={18} color="#10b981" />
-                    </button>
+                    <div style={{ fontWeight: 600 }}>{u.name}</div>
+                    <div style={{ fontSize: 12, opacity: 0.5 }}>Tap to chat</div>
                   </div>
+
+                  <MessageCircle size={20} color="var(--gold-light)" />
                 </div>
               ))
             )}
           </div>
         </div>
 
-        {/* -------------------- Chat panel -------------------- */}
-        <div style={{ background: "#071023", borderRadius: 14, padding: 16, height: "78vh", display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>{selectedUser ? selectedUser.name : "Select user to chat"}</div>
-            <div style={{ fontSize: 13, color: "#94a3b8" }}>{loggedInUser?.name}</div>
+
+        {/* CHAT PANEL */}
+        <div
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "18px",
+            padding: "20px",
+            height: "78vh",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Chat Header */}
+          <div
+            style={{
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              paddingBottom: 14,
+              marginBottom: 14,
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 600 }}>
+              {selectedUser ? selectedUser.name : "Select a user"}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: "rgba(255,255,255,0.4)",
+                marginTop: 4,
+              }}
+            >
+              You: {loggedInUser?.name}
+            </div>
           </div>
 
+          {/* Messages */}
           <div
             ref={messagesScrollRef}
             onScroll={handleScroll}
-            style={{ flex: 1, overflow: "auto", background: "#061225", padding: 12, borderRadius: 10 }}
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              background: "rgba(255,255,255,0.03)",
+              padding: 16,
+              borderRadius: 12,
+            }}
           >
             {chatId == null ? (
-              <div style={{ color: "#94a3b8" }}>Open a chat to view messages</div>
+              <div style={{ color: "#777" }}>Open a chat to start messaging</div>
             ) : messages.length === 0 ? (
-              <div style={{ color: "#94a3b8" }}>No messages yet — say hello 👋</div>
+              <div style={{ color: "#777" }}>
+                No messages yet — say hello 👋
+              </div>
             ) : (
               messages.map((m) => {
                 const mine = m.senderId === loggedInUser.id;
                 return (
-                  <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 8 }}>
-                    <div style={{ maxWidth: "75%", padding: 10, background: mine ? "#10b981" : "#0f1724", borderRadius: 8, color: mine ? "#000" : "#fff" }}>
-                      {!mine && <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>{m.senderName || selectedUser?.name}</div>}
+                  <div
+                    key={m.id}
+                    style={{
+                      display: "flex",
+                      justifyContent: mine ? "flex-end" : "flex-start",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        maxWidth: "75%",
+                        padding: "12px 16px",
+                        background: mine
+                          ? "var(--gold-light)"
+                          : "rgba(255,255,255,0.06)",
+                        color: mine ? "#000" : "#fff",
+                        borderRadius: 12,
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.25)",
+                      }}
+                    >
+                      {!mine && (
+                        <div
+                          style={{
+                            fontSize: 11,
+                            opacity: 0.7,
+                            marginBottom: 6,
+                          }}
+                        >
+                          {m.senderName}
+                        </div>
+                      )}
+
                       <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
-                      <div style={{ fontSize: 11, opacity: 0.55, marginTop: 6, textAlign: "right" }}>
-                        {m.createdAt?.toDate ? new Date(m.createdAt.toDate()).toLocaleString() : ""}
+
+                      <div
+                        style={{
+                          fontSize: 10,
+                          opacity: 0.5,
+                          marginTop: 6,
+                          textAlign: "right",
+                        }}
+                      >
+                        {m.createdAt?.toDate
+                          ? new Date(m.createdAt.toDate()).toLocaleString()
+                          : ""}
                       </div>
                     </div>
                   </div>
@@ -299,42 +439,42 @@ export default function CommunityPage() {
             )}
           </div>
 
-          {/* <div ref={messagesScrollRef} style={{ flex: 1, overflow: "auto", background: "#061225", padding: 12, borderRadius: 10 }}>
-            {chatId == null ? (
-              <div style={{ color: "#94a3b8" }}>Open a chat to view messages</div>
-            ) : messages.length === 0 ? (
-              <div style={{ color: "#94a3b8" }}>No messages yet — say hello 👋</div>
-            ) : (
-              messages.map((m) => {
-                const mine = m.senderId === loggedInUser.id;
-                return (
-                  <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 8 }}>
-                    <div style={{ maxWidth: "75%", padding: 10, background: mine ? "#10b981" : "#0f1724", borderRadius: 8, color: mine ? "#000" : "#fff" }}>
-                      {!mine && <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>{m.senderName || selectedUser?.name}</div>}
-                      <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
-                      <div style={{ fontSize: 11, opacity: 0.55, marginTop: 6, textAlign: "right" }}>
-                        {m.createdAt?.toDate ? new Date(m.createdAt.toDate()).toLocaleString() : ""}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div> */}
-
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          {/* Input */}
+          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
             <input
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder={selectedUser ? `Message ${selectedUser.name}...` : "Select user"}
+              placeholder={
+                selectedUser ? `Message ${selectedUser.name}...` : "Select user"
+              }
               disabled={!selectedUser}
-              style={{ flex: 1, padding: 10, borderRadius: 10, background: "#0f1724", border: "1px solid #263243", color: "#fff" }}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "#fff",
+                fontSize: 14,
+              }}
             />
+
             <button
               onClick={sendMessage}
               disabled={!selectedUser || !messageText.trim()}
-              style={{ padding: "10px 14px", borderRadius: 10, background: messageText.trim() ? "#10b981" : "#0f1724", color: messageText.trim() ? "#000" : "#666" }}
+              style={{
+                padding: "12px 20px",
+                borderRadius: 12,
+                background: messageText.trim()
+                  ? "var(--gold-light)"
+                  : "rgba(255,255,255,0.05)",
+                color: messageText.trim() ? "#000" : "#777",
+                border: "1px solid rgba(255,255,255,0.1)",
+                fontWeight: 600,
+                cursor: messageText.trim() ? "pointer" : "default",
+                transition: "0.25s",
+              }}
             >
               Send
             </button>

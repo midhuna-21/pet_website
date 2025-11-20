@@ -1,3 +1,6 @@
+// Updated code with responsive mobile and tablet view
+// (Full component below)
+
 "use client";
 
 import { Camera, MapPin, Heart, Upload, X } from "lucide-react";
@@ -34,7 +37,6 @@ export default function ReportPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [isFocused, setIsFocused] = useState<boolean>(false);
-
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
@@ -52,10 +54,6 @@ export default function ReportPage() {
   useEffect(() => {
     if (user && showLoginModal) setShowLoginModal(false);
   }, [user, showLoginModal]);
-
-  const handleSelectLocation = (place: any) => {
-    console.log("User selected location:", place);
-  };
 
   const handleSelect = (place: any) => {
     if (place?.geometry && place.geometry.location) {
@@ -122,6 +120,7 @@ export default function ReportPage() {
         createdAt: serverTimestamp(),
         userId: user.uid,
       });
+
       setShowSuccessModal(true);
       setPetName("");
       setPetPhoto(null);
@@ -136,10 +135,10 @@ export default function ReportPage() {
     }
   };
 
-  // === NEW: single container style used across the page ===
+  // === container styles ===
   const CONTAINER_STYLE: React.CSSProperties = {
-    maxWidth: "1200px",      // change once to affect whole page alignment
-    padding: "70px 55px",       // left/right gutter
+    maxWidth: "1200px",
+    padding: "70px 55px",
     margin: "0 auto",
     boxSizing: "border-box",
     width: "100%",
@@ -147,217 +146,270 @@ export default function ReportPage() {
 
   return (
     <div>
-         <Header/>
-            <div
-      style={{
-        minHeight: "100vh",
-        padding: "40px 0",
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        position: "relative",
-        background: "#000",
-      }}
-    >
-   
-      {/* AUTH MODAL */}
-      {showAuthModal && (
+      <style>{`
+        /* ====== RESPONSIVE STYLES ====== */
+
+        @media (max-width: 1024px) {
+          .two-col {
+            grid-template-columns: 1fr !important;
+            gap: 40px !important;
+          }
+          .left-text h1 {
+            font-size: 36px !important;
+            margin-bottom: 12px !important;
+          }
+          .left-text p {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+            max-width: 100% !important;
+          }
+          .form-wrapper {
+            max-width: 100% !important;
+            margin: 0 !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .page-container {
+            padding: 40px 22px !important;
+          }
+          .left-text h1 {
+            font-size: 30px !important;
+          }
+          .left-text p {
+            font-size: 15px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .left-text h1 {
+            font-size: 22px !important;
+            line-height: 1.25 !important;
+            margin-bottom: 6px !important;
+          }
+          .left-text p {
+            font-size: 13px !important;
+            line-height: 1.4 !important;
+            margin: 6px 0 !important;
+          }
+          input, textarea, select {
+            font-size: 13px !important;
+          }
+          input::placeholder {
+            font-size: 12px !important;
+            opacity: 0.7 !important;
+          }
+          .form-wrapper label {
+            font-size: 13px !important;
+            margin-bottom: 4px !important;
+          }
+          .form-wrapper button {
+            font-size: 14px !important;
+            padding: 10px 0 !important;
+          }
+          .page-container {
+            padding-top: 40px !important;
+            padding-bottom: 40px !important;
+          }
+          .two-col {
+            gap: 20px !important;
+          }
+        }
+          .left-text p {
+            font-size: 14px !important;
+            margin-bottom: 10px !important;
+          }
+        }
+      `}</style>
+
+      <div
+        style={{
+          minHeight: "100vh",
+          padding: "40px 0",
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          position: "relative",
+          background: "#000",
+        }}
+      >
+        {/* dot bg */}
         <div
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
+            opacity: 0.03,
+            backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+            backgroundSize: "40px 40px",
+            pointerEvents: "none",
           }}
-          onClick={() => setShowAuthModal(false)}
-        >
-          <div onClick={(e) => e.stopPropagation()}>
-            <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} onSelect={handleSelectLocation} />
-          </div>
-        </div>
-      )}
+        />
 
-      {/* subtle dot texture (global) */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          opacity: 0.03,
-          backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
-          backgroundSize: "40px 40px",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* ====== PAGE INNER (uses single container) ====== */}
-      <div style={{ ...CONTAINER_STYLE, paddingTop: "100px", paddingBottom: "100px" }}>
-        {/* TWO-COLUMN WRAPPER - keeps exact left/right alignment as other pages */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "80px",
-            alignItems: "start",
-          }}
+          className="page-container"
+          style={{ ...CONTAINER_STYLE, paddingTop: "100px", paddingBottom: "100px" }}
         >
-          {/* LEFT - TEXT (keeps same horizontal position as other pages using CONTAINER_STYLE) */}
-          <div style={{ paddingRight: "20px" }}>
-            <h1
-              style={{
-                fontSize: "52px",
-                color: "#fff",
-                fontFamily: "Playfair Display",
-                fontWeight: 700,
-                marginBottom: "20px",
-                lineHeight: "1.15",
-                letterSpacing: "-1px",
-              }}
-            >
-              Report a stray,
-              <span style={{ color: "var(--gold-light)", display: "block" }}>
-                show some kindness.
-              </span>
-            </h1>
-
-            <p
-              style={{
-                fontSize: "20px",
-                lineHeight: "1.7",
-                color: "rgba(255,255,255,0.65)",
-                maxWidth: "500px",
-              }}
-            >
-              Each report helps connect a stray to the right people—volunteers,
-              feeders, rescuers, and the community. Your compassion creates a path to safety.
-            </p>
-
-            <p
-              style={{
-                marginTop: "30px",
-                fontSize: "17px",
-                color: "rgba(255,255,255,0.45)",
-                maxWidth: "450px",
-                lineHeight: "1.6",
-              }}
-            >
-              Share a name, a photo, and the place you last met them. That’s all it takes to make sure they’re noticed and cared for.
-            </p>
-          </div>
-
-          {/* RIGHT - FORM (small, minimal, same width fields) */}
-          <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "420px", marginLeft: "auto", padding: "0" }}>
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "15px", color: "rgba(255,255,255,0.85)", marginBottom: "8px", fontWeight: 500 }}>
-              Who’s this lovely soul?
-              </label>
-
-              <input
-                type="text"
-                value={petName}
-                placeholder="Shadow, Luna, Ranger…"
-                onChange={(e) => setPetName(e.target.value)}
+          <div
+            className="two-col"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "80px",
+              alignItems: "start",
+            }}
+          >
+            {/* LEFT TEXT */}
+            <div className="left-text" style={{ paddingRight: "20px" }}>
+              <h1
                 style={{
-                  width: "100%",
-                  padding: "10px 0",
-                  background: "transparent",
-                  border: "none",
-                  borderBottom: "1px solid rgba(255,255,255,0.18)",
+                  fontSize: "52px",
                   color: "#fff",
-                  fontSize: "15px",
-                  outline: "none",
-                  transition: "0.15s",
+                  fontFamily: "Playfair Display",
+                  fontWeight: 700,
+                  marginBottom: "20px",
+                  lineHeight: "1.15",
+                  letterSpacing: "-1px",
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderBottom = "1px solid rgba(255,255,255,0.45)")}
-                onBlur={(e) => (e.currentTarget.style.borderBottom = "1px solid rgba(255,255,255,0.18)")}
-              />
-              {errors.petName && <p style={{ color: "#e04f5f", marginTop: "6px", fontSize: "12px" }}>{errors.petName}</p>}
+              >
+                Report a stray,
+                <span style={{ color: "var(--gold-light)", display: "block" }}>
+                  show some kindness.
+                </span>
+              </h1>
+
+              <p
+                style={{
+                  fontSize: "20px",
+                  lineHeight: "1.7",
+                  color: "rgba(255,255,255,0.65)",
+                  maxWidth: "500px",
+                }}
+              >
+                Each report helps connect a stray to the right people—volunteers, feeders, rescuers, and the community.
+              </p>
+
+              <p
+                style={{
+                  marginTop: "20px",
+                  fontSize: "17px",
+                  color: "rgba(255,255,255,0.45)",
+                  maxWidth: "450px",
+                  lineHeight: "1.6",
+                }}
+              >
+                Share a name, a photo, and the place you last met them.
+              </p>
             </div>
 
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "15px", color: "rgba(255,255,255,0.85)", marginBottom: "8px", fontWeight: 500 }}>
-              Share a photo of your new friend
-              </label>
-
-              {!image ? (
-                <label style={{ display: "block", width: "100%", padding: "32px 0", textAlign: "center", border: "1px dashed rgba(255,255,255,0.18)", borderRadius: "8px", cursor: "pointer" }}>
-                  <input type="file" onChange={handleImageUpload} style={{ display: "none" }} />
-                  <Upload size={28} color="rgba(255,255,255,0.4)" />
-                  <p style={{ marginTop: "8px", fontSize: "13px", color: "rgba(255,255,255,0.6)" }}>Click to upload</p>
-                </label>
-              ) : (
-                <div style={{ position: "relative", borderRadius: "8px", overflow: "hidden" }}>
-                  <img src={image as string} style={{ width: "100%", height: "220px", objectFit: "cover", display: "block" }} />
-                  <button type="button" onClick={removeImage} style={{ position: "absolute", top: "10px", right: "10px", width: "28px", height: "28px", borderRadius: "50%", background: "rgba(0,0,0,0.8)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                    <X size={16} color="#fff" />
-                  </button>
-                </div>
-              )}
-
-              {errors.photo && <p style={{ color: "#e04f5f", marginTop: "6px", fontSize: "12px" }}>{errors.photo}</p>}
-            </div>
-
-            <div style={{ marginBottom: "28px" }}>
-              <label style={{ display: "block", fontSize: "15px", color: "rgba(255,255,255,0.85)", marginBottom: "8px", fontWeight: 500 }}>
-                Where did you meet them?
-              </label>
-
-              <div style={{ marginBottom: "6px" }}>
-                <GooglePlacesAutocomplete onSelect={handleSelect} error={errors.location} />
+            {/* FORM */}
+            <form
+              className="form-wrapper"
+              onSubmit={handleSubmit}
+              style={{ width: "100%", maxWidth: "420px", marginLeft: "auto" }}
+            >
+              <div style={{ marginBottom: "24px" }}>
+                <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15 }}>Who’s this lovely soul?</label>
+                <input
+                  type="text"
+                  value={petName}
+                  placeholder="Shadow, Luna, Ranger…"
+                  onChange={(e) => setPetName(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 0",
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: "1px solid rgba(255,255,255,0.18)",
+                    color: "#fff",
+                    fontSize: "15px",
+                  }}
+                />
+                {errors.petName && <p style={{ color: "#e04f5f" }}>{errors.petName}</p>}
               </div>
 
-              {errors.location && <p style={{ color: "#e04f5f", fontSize: "12px" }}>{errors.location}</p>}
-            </div>
+              <div style={{ marginBottom: "24px" }}>
+                <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15 }}>Share a photo</label>
 
-            <button
-              type="submit"
-              style={{
-                width: "100%",
-                padding: "12px 0",
-                background: "#1a1a1a",
-                color: "rgba(255,255,255,0.95)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: "8px",
-                fontSize: "15px",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "0.15s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#2a2a2a";
-                (e.currentTarget as HTMLButtonElement).style.border = "1px solid rgba(255,255,255,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a";
-                (e.currentTarget as HTMLButtonElement).style.border = "1px solid rgba(255,255,255,0.12)";
-              }}
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Submit Report"}
-            </button>
-          </form>
-        </div>
-      </div>
+                {!image ? (
+                  <label
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: "32px 0",
+                      textAlign: "center",
+                      border: "1px dashed rgba(255,255,255,0.18)",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input type="file" onChange={handleImageUpload} style={{ display: "none" }} />
+                    <Upload size={28} color="rgba(255,255,255,0.4)" />
+                  </label>
+                ) : (
+                  <div style={{ position: "relative" }}>
+                    <img src={image} style={{ width: "100%", borderRadius: 8 }} />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      style={{ position: "absolute", top: 10, right: 10 }}
+                    >
+                      <X size={16} color="#fff" />
+                    </button>
+                  </div>
+                )}
 
-      {/* success modal */}
-      {showSuccessModal && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
-          <div style={{ background: "rgba(30,41,59,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "14px", padding: "28px 36px", textAlign: "center" }}>
-            <div style={{ width: 56, height: 56, margin: "0 auto 12px", borderRadius: "50%", background: "rgba(207,168,92,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff" style={{ width: 28, height: 28 }}>
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-            </div>
+                {errors.photo && <p style={{ color: "#e04f5f" }}>{errors.photo}</p>}
+              </div>
 
-            <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Much love!</h2>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 15, lineHeight: 1.4 }}>Look at you! Making the world a better place for furry friends.</p>
+              <div style={{ marginBottom: "28px" }}>
+                <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15 }}>Where did you meet them?</label>
+                <GooglePlacesAutocomplete onSelect={handleSelect} error={errors.location} />
+                {errors.location && <p style={{ color: "#e04f5f" }}>{errors.location}</p>}
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  width: "100%",
+                  padding: "12px 0",
+                  background: "#1a1a1a",
+                  color: "#fff",
+                  borderRadius: 8,
+                  fontSize: 15,
+                }}
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Submit Report"}
+              </button>
+            </form>
           </div>
         </div>
-      )}
-    </div>
-    </div>
 
+        {showSuccessModal && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(30,41,59,0.95)",
+                padding: "28px 36px",
+                borderRadius: "14px",
+                textAlign: "center",
+              }}
+            >
+              <h2 style={{ color: "#fff" }}>Much love!</h2>
+              <p style={{ color: "rgba(255,255,255,0.7)" }}>You made the world kinder ❤️</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
-  

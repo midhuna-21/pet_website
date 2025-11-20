@@ -343,12 +343,11 @@ export default function Tasks() {
     </div>
   );
 
-  // ----- page render (classic centered layout) -----
   return (
-    <div style={{ minHeight: "100vh", background: "#000", color: "#fff",fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
-      <Header />
-
-      <div style={{ maxWidth: 1100, margin: "0 auto", marginTop: 80 }}>
+    <div style={{ marginTop: "100px",
+          marginBottom: "50px",minHeight: "100vh", background: "#000", color: "#fff",fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+    
+      <div style={{ maxWidth: 1100, margin: "0 auto",   }}>
         {/* Title block */}
         <div style={{ marginBottom: 20 }}>
           <h1 style={{ fontFamily: "Playfair Display", fontSize: 44, margin: 0, fontWeight: 700, color: "#fff" }}>

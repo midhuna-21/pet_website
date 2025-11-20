@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapPin, Clock, Heart, Navigation } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { MapPin, Clock } from "lucide-react";
 import { db } from "../lib/firebase";
 import { collection, getDocs, doc, getDoc, orderBy, query } from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import AuthModal from "../components/AuthModal";
-import Header from "../components/Header";
 
 interface Pet {
     id: string;
@@ -21,15 +18,12 @@ interface Pet {
 
 export default function SpottedPage() {
     const [showAuthModal, setShowAuthModal] = useState(false);
-    const [user, setUser] = useState<any>(null);
     const [reports, setReports] = useState<Pet[]>([]);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
 
     const handleSelectLocation = (place: any) => {
         console.log("User selected location:", place);
     };
-
 
     useEffect(() => {
         const fetchReports = async () => {
@@ -85,8 +79,8 @@ export default function SpottedPage() {
 
     return (
         <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }}>
-            <Header />
-            {/* AuthModal */}
+
+
             {showAuthModal && (
                 <div
                     style={{
@@ -106,6 +100,57 @@ export default function SpottedPage() {
                 </div>
             )}
 
+            <style>
+                {`
+                /* GRID RESPONSIVENESS */
+                @media (max-width: 1024px) {
+                    .responsive-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                    }
+                    .card { width: 100% !important; }
+                }
+
+                @media (max-width: 640px) {
+                    .responsive-grid {
+                        grid-template-columns: repeat(1, 1fr) !important;
+                        gap: 18px !important;
+                    }
+                    .card { width: 100% !important; }
+                    .card-img { height: 240px !important; }
+                }
+
+                /* ---------- YOUR REQUESTED CHANGES ---------- */
+
+                /* TABLET title smaller */
+                @media (max-width: 1024px) {
+                    .section-title {
+                        font-size: 26px !important;
+                    }
+                    .section-subtitle {
+                        line-height: 1.4 !important;
+                    }
+                    .section-container {
+                        margin-bottom: 35px !important;
+                    }
+                }
+
+                /* MOBILE title even smaller */
+                @media (max-width: 640px) {
+                    .section-title {
+                        font-size: 22px !important;
+                    }
+                    .section-subtitle {
+                        font-size: 15px !important;
+                        line-height: 1.4 !important;
+                    }
+                    .section-container {
+                        margin-bottom: 30px !important;
+                    }
+                }
+                `}
+            </style>
+
+
             <div
                 style={{
                     maxWidth: "1100px",
@@ -113,21 +158,24 @@ export default function SpottedPage() {
                     padding: "80px 24px",
                 }}
             >
+
                 {/* SECTION TITLE */}
-                <div style={{ marginBottom: "60px", textAlign: "center" }}>
+                <div className="section-container" style={{ marginBottom: "60px", textAlign: "center" }}>
                     <h1
+                        className="section-title"
                         style={{
-                            fontSize: "46px",
+                            fontSize: "46px",   // desktop size (unchanged)
                             fontWeight: 700,
                             color: "#ffffff",
                             fontFamily: "Playfair Display",
                             marginBottom: "14px",
                         }}
                     >
-                       Aww, Look Who We Ran Into!
+                        Aww, Look Who We Ran Into!
                     </h1>
 
                     <p
+                        className="section-subtitle"
                         style={{
                             fontSize: "18px",
                             color: "rgba(255,255,255,0.65)",
@@ -136,24 +184,28 @@ export default function SpottedPage() {
                             lineHeight: "1.7",
                         }}
                     >
-                       These sweet babies were seen around. Let’s make sure they’re okay.
+                        These sweet babies were seen around. Let’s make sure they’re okay.
                     </p>
                 </div>
 
+
                 {/* GRID */}
                 <div
+                    className="responsive-grid"
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",   // ⭐ ALWAYS 3 PER ROW
-                        gap: "24px",                              // ⭐ TIGHTER SPACING
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gap: "24px",
                         justifyItems: "center",
                     }}
                 >
+
                     {reports.map((item) => (
                         <div
                             key={item.id}
+                            className="card"
                             style={{
-                                width: "340px",                // ⭐ SMALLER CARD WIDTH
+                                width: "340px",
                                 borderRadius: "22px",
                                 overflow: "hidden",
                                 background: "#000",
@@ -163,12 +215,13 @@ export default function SpottedPage() {
                             onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-6px)")}
                             onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
                         >
-                            {/* IMAGE */}
+
                             <div
+                                className="card-img"
                                 style={{
                                     position: "relative",
                                     width: "100%",
-                                    height: "300px",      // ⭐ SLIGHTLY SMALLER HEIGHT
+                                    height: "300px",
                                     overflow: "hidden",
                                 }}
                             >
@@ -183,7 +236,6 @@ export default function SpottedPage() {
                                     }}
                                 />
 
-                                {/* GOLD BADGE — TOP RIGHT */}
                                 <div
                                     style={{
                                         position: "absolute",
@@ -200,7 +252,6 @@ export default function SpottedPage() {
                                     Needs You
                                 </div>
 
-                                {/* DARK OVERLAY */}
                                 <div
                                     style={{
                                         position: "absolute",
@@ -216,7 +267,6 @@ export default function SpottedPage() {
                                         justifyContent: "flex-end",
                                     }}
                                 >
-                                    {/* NAME */}
                                     <h3
                                         style={{
                                             fontSize: "24px",
@@ -229,7 +279,6 @@ export default function SpottedPage() {
                                         {item.name}
                                     </h3>
 
-                                    {/* LOCATION — TRUNCATED */}
                                     <div
                                         style={{
                                             display: "flex",
@@ -253,7 +302,6 @@ export default function SpottedPage() {
                                         </span>
                                     </div>
 
-                                    {/* REPORTED BY */}
                                     <span
                                         style={{
                                             fontSize: "12px",
@@ -264,7 +312,6 @@ export default function SpottedPage() {
                                         Reported by {item.reporterName}
                                     </span>
 
-                                    {/* TIME */}
                                     <div
                                         style={{
                                             display: "flex",
@@ -279,7 +326,6 @@ export default function SpottedPage() {
                                         <span>{getTimeAgo(item.createdAt)}</span>
                                     </div>
 
-                                    {/* BUTTON */}
                                     <button
                                         style={{
                                             padding: "10px 14px",
@@ -306,15 +352,15 @@ export default function SpottedPage() {
                                     >
                                         Get Directions →
                                     </button>
+
                                 </div>
                             </div>
                         </div>
                     ))}
+
                 </div>
 
             </div>
-
-
         </div>
     );
 }

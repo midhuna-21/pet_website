@@ -219,8 +219,6 @@ export default function CommunityPage() {
         // padding: "40px 20px",
       }}
     >
-      <Header />
-
       {/* TOP SECTION */}
       <div
         style={{

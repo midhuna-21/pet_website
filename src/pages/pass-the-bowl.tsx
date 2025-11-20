@@ -49,7 +49,7 @@ export default function PassTheBowlSystem() {
       }}
     >
 
-<Header />
+
       {/* Availability */}
       {currentPage === "availability" && (
         <AvailabilityPage

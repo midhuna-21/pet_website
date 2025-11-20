@@ -180,7 +180,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ background: "#000", minHeight: "100vh", color: "#fff" }}>
-      <Header />
+   
 
       <div
         style={{

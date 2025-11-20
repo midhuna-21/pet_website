@@ -3,7 +3,7 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/strays": "pages/strays.js",
-  "/dashboard": "pages/dashboard.js",
-  "/": "pages/index.js",
-  "/report": "pages/report.js"
+  "/pass-the-bowl": "pages/pass-the-bowl.js",
+  "/tasks": "pages/tasks.js",
+  "/community": "pages/community.js"
 }

@@ -18,11 +18,11 @@ export default function Header() {
     <header
       style={{
         width: "100%",
-        justifyContent:'center',
-        alignItems:'center',
-        position: "sticky",
+        position: "fixed",
         top: 0,
         zIndex: 50,
+        backdropFilter: "blur(4px)",
+        background: "rgba(0,0,0,0.45)",
       }}
     >
       {/* AUTH MODAL */}
@@ -49,7 +49,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* MAIN HEADER WRAPPER */}
+      {/* HEADER CONTENT */}
       <div
         style={{
           maxWidth: "1100px",
@@ -57,28 +57,28 @@ export default function Header() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "18px 40px",
+          padding: "12px 15px",
         }}
       >
-        {/* LOGO */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <a
-            href="/"
-            style={{
-              fontFamily: "Playfair Display",
-              fontSize: "26px",
-              fontWeight: 700,
-              background:
-                "linear-gradient(180deg, var(--gold-light), var(--gold-dark))",
-              WebkitTextFillColor: "transparent",
-              WebkitBackgroundClip: "text",
-              letterSpacing: "0.5px",
-              textDecoration: "none",
-            }}
-          >
-            StrayPals
-          </a>
-        </div>
+     <a
+  href="/"
+  className="logo-text"
+  style={{
+    fontFamily: "Playfair Display",
+    fontSize: "20px",
+    fontWeight: 700,
+    background:
+      "linear-gradient(180deg, var(--gold-light), var(--gold-dark))",
+    WebkitTextFillColor: "transparent",
+    WebkitBackgroundClip: "text",
+    letterSpacing: "0.2px",
+    textDecoration: "none",
+  }}
+>
+  StrayPals
+</a>
+
+
 
         {/* DESKTOP NAV */}
         <nav
@@ -86,45 +86,25 @@ export default function Header() {
           style={{
             display: "none",
             alignItems: "center",
-            gap: "36px",
+            gap: "28px",
           }}
         >
           <HeaderLink href="/" user={user} setShowAuthModal={setShowAuthModal}>
             Home
           </HeaderLink>
-          <HeaderLink
-            href="/report"
-            user={user}
-            setShowAuthModal={setShowAuthModal}
-          >
+          <HeaderLink href="/report" user={user} setShowAuthModal={setShowAuthModal}>
             Report
           </HeaderLink>
-          <HeaderLink
-            href="/strays"
-            user={user}
-            setShowAuthModal={setShowAuthModal}
-          >
+          <HeaderLink href="/strays" user={user} setShowAuthModal={setShowAuthModal}>
             Strays
           </HeaderLink>
-          <HeaderLink
-            href="/community"
-            user={user}
-            setShowAuthModal={setShowAuthModal}
-          >
+          <HeaderLink href="/community" user={user} setShowAuthModal={setShowAuthModal}>
             Community
           </HeaderLink>
-          <HeaderLink
-            href="/tasks"
-            user={user}
-            setShowAuthModal={setShowAuthModal}
-          >
+          <HeaderLink href="/tasks" user={user} setShowAuthModal={setShowAuthModal}>
             Tasks
           </HeaderLink>
-          {/* <HeaderLink
-            href="/stations"
-            user={user}
-            setShowAuthModal={setShowAuthModal}
-          >
+          {/* <HeaderLink href="/stations" user={user} setShowAuthModal={setShowAuthModal}>
             Stations
           </HeaderLink> */}
           <HeaderLink
@@ -134,7 +114,7 @@ export default function Header() {
           >
             Pass the Bowl
           </HeaderLink>
-            <HeaderLink
+          <HeaderLink
             href="/dashboard"
             user={user}
             setShowAuthModal={setShowAuthModal}
@@ -145,57 +125,73 @@ export default function Header() {
         </nav>
 
         {/* MOBILE MENU BUTTON */}
-        <button
-          className="mobile-btn"
+        <div
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           style={{
-            display: "block",
-            background: "rgba(207,168,92,0.15)",
-            border: "1px solid rgba(207,168,92,0.4)",
-            padding: "8px",
-            borderRadius: "8px",
-            color: "var(--gold)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
           }}
+          className="mobile-only"
         >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+          {mobileMenuOpen ? (
+            <X size={26} color="var(--gold-light)" />
+          ) : (
+            <Menu size={26} color="var(--gold-light)" />
+          )}
+        </div>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* FULL-SCREEN MOBILE MENU WITH BLUR */}
       {mobileMenuOpen && (
         <div
           style={{
-            background: "rgba(0,0,0,0.8)",
-            borderTop: "1px solid rgba(207,168,92,0.3)",
-            padding: "16px",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100vh",
+            background: "rgba(0, 0, 0, 0)",
+            zIndex: 999,
+            pointerEvents: "none",
           }}
         >
-          <MobileHeaderLink href="/">Home</MobileHeaderLink>
-          <MobileHeaderLink href="/report">Report</MobileHeaderLink>
-          <MobileHeaderLink href="/spotted">Spotted</MobileHeaderLink>
-          <MobileHeaderLink href="/community">Community</MobileHeaderLink>
-          <MobileHeaderLink href="/tasks">Tasks</MobileHeaderLink>
-          <MobileHeaderLink href="/stations">Stations</MobileHeaderLink>
-          <MobileHeaderLink href="/pass-the-bowl">
-            Pass the Bowl
-          </MobileHeaderLink>
+
+          <div className={`mobile-sidebar ${mobileMenuOpen ? "open" : ""}`}>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                background: "none",
+                border: "none",
+                color: "white",
+                fontSize: "20px",
+                cursor: "pointer",
+              }}
+            >
+              ✕
+            </button>
+
+            <MobileHeaderLink href="/">Home</MobileHeaderLink>
+            <MobileHeaderLink href="/report">Report</MobileHeaderLink>
+            <MobileHeaderLink href="/strays">Strays</MobileHeaderLink>
+            <MobileHeaderLink href="/community">Community</MobileHeaderLink>
+            <MobileHeaderLink href="/tasks">Tasks</MobileHeaderLink>
+            {/* <MobileHeaderLink href="/stations">Stations</MobileHeaderLink> */}
+            <MobileHeaderLink href="/pass-the-bowl">Pass the Bowl</MobileHeaderLink>
+            <MobileHeaderLink href="/dashboard">Dashboard</MobileHeaderLink>
+          </div>
         </div>
       )}
 
-      <style jsx>{`
-        @media (min-width: 1024px) {
-          .desktop-nav {
-            display: flex !important;
-          }
-          .mobile-btn {
-            display: none !important;
-          }
-        }
-      `}</style>
+
+
     </header>
   );
 }
 
+/* DESKTOP LINK */
 function HeaderLink({ href, children, user, setShowAuthModal }) {
   return (
     <a
@@ -207,7 +203,7 @@ function HeaderLink({ href, children, user, setShowAuthModal }) {
         }
       }}
       style={{
-        fontSize: "14px",
+        fontSize: "13px",
         color: "rgba(255,255,255,0.85)",
         textDecoration: "none",
         transition: "0.3s",
@@ -222,17 +218,20 @@ function HeaderLink({ href, children, user, setShowAuthModal }) {
   );
 }
 
+/* MOBILE LINK */
 function MobileHeaderLink({ href, children }) {
   return (
     <a
       href={href}
       style={{
-        display: "block",
-        padding: "12px 0",
-        fontSize: "18px",
-        color: "var(--gold-light)",
+        padding: "9px 0",
+        fontSize: "12px",
+        color: "#ffffff",
         textDecoration: "none",
+        transition: "0.3s",
       }}
+      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-light)")}
+      onMouseLeave={(e) => (e.currentTarget.style.color = "#ffffff")}
     >
       {children}
     </a>

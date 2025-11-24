@@ -688,4 +688,18 @@ body {
   }
 }
 
+.location-input {
+  width: 100%;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  font-size: 15px;
+}
+
+.location-input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
 

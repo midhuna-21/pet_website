@@ -1,6 +1,3 @@
-// Updated code with responsive mobile and tablet view
-// (Full component below)
-
 "use client";
 
 import { Camera, MapPin, Heart, Upload, X } from "lucide-react";
@@ -13,6 +10,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import LoginWidget from "../components/LoginWidget";
 import AuthModal from "../components/AuthModal";
 import Header from "../components/Header";
+import Loading from "../components/Loading";
+import { useRouter } from "next/navigation";
+
 
 interface FormErrors {
   petName?: string;
@@ -38,13 +38,20 @@ export default function ReportPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const router = useRouter();
+
 
   useEffect(() => {
     if (showSuccessModal) {
-      const timer = setTimeout(() => setShowSuccessModal(false), 3000);
+      const timer = setTimeout(() => {
+        setShowSuccessModal(false);
+        router.push("/strays");
+      }, 2000);
+
       return () => clearTimeout(timer);
     }
-  }, [showSuccessModal]);
+  }, [showSuccessModal, router]);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
@@ -93,49 +100,91 @@ export default function ReportPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
+  //   if (!user) {
+  //     setShowAuthModal(true);
+  //     return;
+  //   }
 
-    if (!validateFields()) return;
+  //   if (!validateFields()) return;
 
-    try {
-      setLoading(true);
-      const storageRef = ref(storage, `pets/${Date.now()}_${petPhoto?.name}`);
-      await uploadBytes(storageRef, petPhoto!);
-      const photoURL = await getDownloadURL(storageRef);
+  //   try {
+  //     setLoading(true);
+  //     const storageRef = ref(storage, `pets/${Date.now()}_${petPhoto?.name}`);
+  //     await uploadBytes(storageRef, petPhoto!);
+  //     const photoURL = await getDownloadURL(storageRef);
 
-      await addDoc(collection(db, "pets"), {
-        name: petName,
-        photoURL,
-        location: selectedLocation?.address,
-        coordinates: {
-          lat: selectedLocation?.lat,
-          lng: selectedLocation?.lng,
-        },
-        createdAt: serverTimestamp(),
-        userId: user.uid,
-      });
+  //     await addDoc(collection(db, "pets"), {
+  //       name: petName,
+  //       photoURL,
+  //       location: selectedLocation?.address,
+  //       coordinates: {
+  //         lat: selectedLocation?.lat,
+  //         lng: selectedLocation?.lng,
+  //       },
+  //       createdAt: serverTimestamp(),
+  //       userId: user.uid,
+  //     });
 
-      setShowSuccessModal(true);
-      setPetName("");
-      setPetPhoto(null);
-      setImage(null);
-      setSelectedLocation(null);
-      setErrors({});
-    } catch (err: any) {
-      console.error("Error saving pet data:", err);
-      alert("Error saving data: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setShowSuccessModal(true);
+  //     setPetName("");
+  //     setPetPhoto(null);
+  //     setImage(null);
+  //     setSelectedLocation(null);
+  //     setErrors({});
+  //   } catch (err: any) {
+  //     console.error("Error saving pet data:", err);
+  //     alert("Error saving data: " + err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // === container styles ===
+ 
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!user) {
+    setShowAuthModal(true);
+    return;
+  }
+
+  if (!validateFields()) return;
+
+  try {
+    setLoading(true); // button shows "Saving..."
+
+    const storageRef = ref(storage, `pets/${Date.now()}_${petPhoto?.name}`);
+    await uploadBytes(storageRef, petPhoto!);
+    const photoURL = await getDownloadURL(storageRef);
+
+    await addDoc(collection(db, "pets"), {
+      name: petName,
+      photoURL,
+      location: selectedLocation?.address,
+      coordinates: {
+        lat: selectedLocation?.lat,
+        lng: selectedLocation?.lng,
+      },
+      createdAt: serverTimestamp(),
+      userId: user.uid,
+    });
+
+    setTimeout(() => {
+      router.push("/strays");
+    }, 2000);
+
+  } catch (err: any) {
+    console.error("Error saving pet data:", err);
+    alert("Error saving data: " + err.message);
+  } finally {
+    // keep loading true until redirect!
+  }
+};
+
   const CONTAINER_STYLE: React.CSSProperties = {
     maxWidth: "1200px",
     padding: "70px 55px",
@@ -150,6 +199,16 @@ export default function ReportPage() {
         /* ====== RESPONSIVE STYLES ====== */
 
         @media (max-width: 1024px) {
+        
+ .no-focus-input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* hide placeholder after typing */
+  .no-focus-input:not(:placeholder-shown)::placeholder {
+    opacity: 0;
+  }
           .two-col {
             grid-template-columns: 1fr !important;
             gap: 40px !important;
@@ -176,9 +235,7 @@ export default function ReportPage() {
           .left-text h1 {
             font-size: 30px !important;
           }
-          .left-text p {
-            font-size: 15px !important;
-          }
+         
         }
 
         @media (max-width: 480px) {
@@ -187,11 +244,7 @@ export default function ReportPage() {
             line-height: 1.25 !important;
             margin-bottom: 6px !important;
           }
-          .left-text p {
-            font-size: 13px !important;
-            line-height: 1.4 !important;
-            margin: 6px 0 !important;
-          }
+       
           input, textarea, select {
             font-size: 13px !important;
           }
@@ -214,11 +267,19 @@ export default function ReportPage() {
           .two-col {
             gap: 20px !important;
           }
+                 .left-text .hero-title {
+    font-size: 22px !important;
+    line-height: 1.1 !important;
+  }
+       .left-text p {
+    font-size:9px !important;
+    line-height: 1.2 !important;
+    margin-top: 5px !important;
+    
+  }
+       
         }
-          .left-text p {
-            font-size: 14px !important;
-            margin-bottom: 10px !important;
-          }
+       
         }
       `}</style>
 
@@ -258,15 +319,16 @@ export default function ReportPage() {
             }}
           >
             {/* LEFT TEXT */}
-            <div className="left-text" style={{ paddingRight: "20px" }}>
-              <h1
+            <div className="left-text">
+              <span
+                className="hero-title"
                 style={{
                   fontSize: "52px",
                   color: "#fff",
                   fontFamily: "Playfair Display",
                   fontWeight: 700,
                   marginBottom: "20px",
-                  lineHeight: "1.15",
+                  lineHeight: "1.0",
                   letterSpacing: "-1px",
                 }}
               >
@@ -274,37 +336,25 @@ export default function ReportPage() {
                 <span style={{ color: "var(--gold-light)", display: "block" }}>
                   show some kindness.
                 </span>
-              </h1>
+              </span>
+
 
               <p
                 style={{
-                  fontSize: "20px",
-                  lineHeight: "1.7",
+                  fontSize: "16px",
+                  lineHeight: "1.3",
                   color: "rgba(255,255,255,0.65)",
                   maxWidth: "500px",
                 }}
               >
-                Each report helps connect a stray to the right people—volunteers, feeders, rescuers, and the community.
-              </p>
-
-              <p
-                style={{
-                  marginTop: "20px",
-                  fontSize: "17px",
-                  color: "rgba(255,255,255,0.45)",
-                  maxWidth: "450px",
-                  lineHeight: "1.6",
-                }}
-              >
-                Share a name, a photo, and the place you last met them.
-              </p>
+                You know, just letting someone know about a stray actually helps them get a bit of food, care, and some kind of attention. They don’t have anyone to speak for them, so even your tiny nudge makes things easier for the people who look out for them. It’s such a small thing from your side, but it ends up giving that little one a better moment in their day. </p>
             </div>
 
             {/* FORM */}
             <form
               className="form-wrapper"
               onSubmit={handleSubmit}
-              style={{ width: "100%", maxWidth: "420px", marginLeft: "auto" }}
+              style={{ width: "100%", maxWidth: "420px" }}
             >
               <div style={{ marginBottom: "24px" }}>
                 <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15 }}>Who’s this lovely soul?</label>
@@ -321,13 +371,17 @@ export default function ReportPage() {
                     borderBottom: "1px solid rgba(255,255,255,0.18)",
                     color: "#fff",
                     fontSize: "15px",
+
+                    outline: "none",
+                    boxShadow: "none",
                   }}
+                  className="no-focus-input"
                 />
                 {errors.petName && <p style={{ color: "#e04f5f" }}>{errors.petName}</p>}
               </div>
 
               <div style={{ marginBottom: "24px" }}>
-                <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15 }}>Share a photo</label>
+                <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15, marginBottom: "6px", display: 'flex' }}>Share a photo</label>
 
                 {!image ? (
                   <label
@@ -338,6 +392,7 @@ export default function ReportPage() {
                       textAlign: "center",
                       border: "1px dashed rgba(255,255,255,0.18)",
                       borderRadius: "8px",
+
                       cursor: "pointer",
                     }}
                   >
@@ -346,13 +401,32 @@ export default function ReportPage() {
                   </label>
                 ) : (
                   <div style={{ position: "relative" }}>
-                    <img src={image} style={{ width: "100%", borderRadius: 8 }} />
+                    {/* <img src={image} style={{ width: "100%", borderRadius: 8 }} /> */}
+                    <img
+                      src={image}
+                      style={{
+                        width: "100%",
+                        height: "260px",
+                        objectFit: "cover",
+                        borderRadius: 8,
+                      }}
+                    />
+
                     <button
                       type="button"
                       onClick={removeImage}
-                      style={{ position: "absolute", top: 10, right: 10 }}
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        background: "rgba(255,255,255,0.8)",
+                        borderRadius: "50%",
+                        padding: 3,
+                        border: "none",
+                        cursor: "pointer",
+                      }}
                     >
-                      <X size={16} color="#fff" />
+                      <X size={16} color="#000" />
                     </button>
                   </div>
                 )}
@@ -361,55 +435,61 @@ export default function ReportPage() {
               </div>
 
               <div style={{ marginBottom: "28px" }}>
-                <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15 }}>Where did you meet them?</label>
+                <label style={{ color: "rgba(255,255,255,0.85)", fontSize: 15, marginBottom: "6px", display: 'flex' }}>Where did you meet them?</label>
                 <GooglePlacesAutocomplete onSelect={handleSelect} error={errors.location} />
                 {errors.location && <p style={{ color: "#e04f5f" }}>{errors.location}</p>}
               </div>
 
-              <button
+              {/* <button
                 type="submit"
                 style={{
                   width: "100%",
-                  padding: "12px 0",
-                  background: "#1a1a1a",
-                  color: "#fff",
-                  borderRadius: 8,
                   fontSize: 15,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: 'center',
+                  gap: 10,
+                  padding: "12px 18px",
+                  background: "linear-gradient(90deg,#b89c58,#d8c48d)",
+                  color: "#000",
+                  borderRadius: 12,
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 6px 18px rgba(216,196,141,0.12)",
                 }}
                 disabled={loading}
               >
                 {loading ? "Saving..." : "Submit Report"}
-              </button>
+              </button> */}
+
+              <button
+  type="submit"
+  disabled={loading}
+  style={{
+    width: "100%",
+    fontSize: 15,
+    padding: "12px 18px",
+    background: loading
+      ? "rgba(255,255,255,0.3)"
+      : "linear-gradient(90deg,#b89c58,#d8c48d)",
+    color: loading ? "#333" : "#000",
+    borderRadius: 12,
+    fontWeight: 700,
+    border: "none",
+    cursor: loading ? "not-allowed" : "pointer",
+    transition: "0.25s",
+  }}
+>
+  {loading ? "Saving..." : "Submit Report"}
+</button>
+
             </form>
           </div>
         </div>
-
-        {showSuccessModal && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
-            }}
-          >
-            <div
-              style={{
-                background: "rgba(30,41,59,0.95)",
-                padding: "28px 36px",
-                borderRadius: "14px",
-                textAlign: "center",
-              }}
-            >
-              <h2 style={{ color: "#fff" }}>Much love!</h2>
-              <p style={{ color: "rgba(255,255,255,0.7)" }}>You made the world kinder ❤️</p>
-            </div>
-          </div>
-        )}
       </div>
+      {/* {loading && <Loading />} */}
+
     </div>
   );
 }

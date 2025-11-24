@@ -5,10 +5,12 @@ import { Menu, X } from "lucide-react";
 import LoginWidget from "./LoginWidget";
 import useAuthGuard from "../hooks/useAuthGuard";
 import AuthModal from "./AuthModal";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { showAuthModal, setShowAuthModal, user } = useAuthGuard();
+  const pathname = usePathname();
 
   const handleSelectLocation = () => {
     console.log("selected");
@@ -57,28 +59,26 @@ export default function Header() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "12px 15px",
+          padding: "17px 15px",
         }}
       >
-     <a
-  href="/"
-  className="logo-text"
-  style={{
-    fontFamily: "Playfair Display",
-    fontSize: "20px",
-    fontWeight: 700,
-    background:
-      "linear-gradient(180deg, var(--gold-light), var(--gold-dark))",
-    WebkitTextFillColor: "transparent",
-    WebkitBackgroundClip: "text",
-    letterSpacing: "0.2px",
-    textDecoration: "none",
-  }}
->
-  StrayPals
-</a>
-
-
+        <a
+          href="/"
+          className="logo-text"
+          style={{
+            fontFamily: "Playfair Display",
+            fontSize: "20px",
+            fontWeight: 700,
+            background:
+              "linear-gradient(180deg, var(--gold-light), var(--gold-dark))",
+            WebkitTextFillColor: "transparent",
+            WebkitBackgroundClip: "text",
+            letterSpacing: "0.2px",
+            textDecoration: "none",
+          }}
+        >
+          StrayPals
+        </a>
 
         {/* DESKTOP NAV */}
         <nav
@@ -89,38 +89,38 @@ export default function Header() {
             gap: "28px",
           }}
         >
-          <HeaderLink href="/" user={user} setShowAuthModal={setShowAuthModal}>
+          <HeaderLink href="/" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Home
           </HeaderLink>
-          <HeaderLink href="/report" user={user} setShowAuthModal={setShowAuthModal}>
+
+          <HeaderLink href="/report" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Report
           </HeaderLink>
-          <HeaderLink href="/strays" user={user} setShowAuthModal={setShowAuthModal}>
+
+          <HeaderLink href="/strays" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Strays
           </HeaderLink>
-          <HeaderLink href="/community" user={user} setShowAuthModal={setShowAuthModal}>
+
+           <HeaderLink href="/stations" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
+            Stations
+          </HeaderLink>
+
+          <HeaderLink href="/community" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Community
           </HeaderLink>
-          <HeaderLink href="/tasks" user={user} setShowAuthModal={setShowAuthModal}>
+
+          <HeaderLink href="/tasks" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Tasks
           </HeaderLink>
-          {/* <HeaderLink href="/stations" user={user} setShowAuthModal={setShowAuthModal}>
-            Stations
-          </HeaderLink> */}
-          <HeaderLink
-            href="/pass-the-bowl"
-            user={user}
-            setShowAuthModal={setShowAuthModal}
-          >
+
+          <HeaderLink href="/pass-the-bowl" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Pass the Bowl
           </HeaderLink>
-          <HeaderLink
-            href="/dashboard"
-            user={user}
-            setShowAuthModal={setShowAuthModal}
-          >
+
+          {/* <HeaderLink href="/dashboard" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Dashboard
-          </HeaderLink>
+          </HeaderLink> */}
+
           <LoginWidget />
         </nav>
 
@@ -142,7 +142,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* FULL-SCREEN MOBILE MENU WITH BLUR */}
+      {/* MOBILE MENU */}
       {mobileMenuOpen && (
         <div
           style={{
@@ -155,7 +155,6 @@ export default function Header() {
             pointerEvents: "none",
           }}
         >
-
           <div className={`mobile-sidebar ${mobileMenuOpen ? "open" : ""}`}>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -173,26 +172,25 @@ export default function Header() {
               ✕
             </button>
 
-            <MobileHeaderLink href="/">Home</MobileHeaderLink>
-            <MobileHeaderLink href="/report">Report</MobileHeaderLink>
-            <MobileHeaderLink href="/strays">Strays</MobileHeaderLink>
-            <MobileHeaderLink href="/community">Community</MobileHeaderLink>
-            <MobileHeaderLink href="/tasks">Tasks</MobileHeaderLink>
-            {/* <MobileHeaderLink href="/stations">Stations</MobileHeaderLink> */}
-            <MobileHeaderLink href="/pass-the-bowl">Pass the Bowl</MobileHeaderLink>
-            <MobileHeaderLink href="/dashboard">Dashboard</MobileHeaderLink>
+            <MobileHeaderLink href="/" pathname={pathname}>Home</MobileHeaderLink>
+            <MobileHeaderLink href="/report" pathname={pathname}>Report</MobileHeaderLink>
+            <MobileHeaderLink href="/strays" pathname={pathname}>Strays</MobileHeaderLink>
+            <MobileHeaderLink href="/stations" pathname={pathname}>Stations</MobileHeaderLink>
+            <MobileHeaderLink href="/community" pathname={pathname}>Community</MobileHeaderLink>
+            <MobileHeaderLink href="/tasks" pathname={pathname}>Tasks</MobileHeaderLink>
+            <MobileHeaderLink href="/pass-the-bowl" pathname={pathname}>Pass the Bowl</MobileHeaderLink>
+            {/* <MobileHeaderLink href="/dashboard" pathname={pathname}>Dashboard</MobileHeaderLink> */}
           </div>
         </div>
       )}
-
-
-
     </header>
   );
 }
 
-/* DESKTOP LINK */
-function HeaderLink({ href, children, user, setShowAuthModal }) {
+/* DESKTOP LINK WITH ACTIVE HIGHLIGHT */
+function HeaderLink({ href, children, pathname, user, setShowAuthModal }) {
+  const isActive = pathname === href;
+
   return (
     <a
       href={href}
@@ -204,34 +202,32 @@ function HeaderLink({ href, children, user, setShowAuthModal }) {
       }}
       style={{
         fontSize: "13px",
-        color: "rgba(255,255,255,0.85)",
         textDecoration: "none",
         transition: "0.3s",
+        color: isActive ? "var(--gold-light)" : "rgba(255,255,255,0.85)",
+        fontWeight: isActive ? "700" : "400",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-light)")}
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.color = "rgba(255,255,255,0.85)")
-      }
     >
       {children}
     </a>
   );
 }
 
-/* MOBILE LINK */
-function MobileHeaderLink({ href, children }) {
+/* MOBILE LINK WITH ACTIVE HIGHLIGHT */
+function MobileHeaderLink({ href, children, pathname }) {
+  const isActive = pathname === href;
+
   return (
     <a
       href={href}
       style={{
         padding: "9px 0",
         fontSize: "12px",
-        color: "#ffffff",
         textDecoration: "none",
         transition: "0.3s",
+        color: isActive ? "var(--gold-light)" : "#ffffff",
+        fontWeight: isActive ? "700" : "400",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-light)")}
-      onMouseLeave={(e) => (e.currentTarget.style.color = "#ffffff")}
     >
       {children}
     </a>

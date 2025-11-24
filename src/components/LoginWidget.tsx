@@ -55,26 +55,7 @@ export default function LoginWidget() {
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* {!user ? (
-          <button style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.625rem 1.25rem',
-            borderRadius: '0.75rem',
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            color: '#cbd5e1',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            cursor: 'pointer',
-            transition: 'all 0.3s'
-          }} className="cta" onClick={() => setOpen(!open)}>  <LogIn size={16} />Sign in</button>
-        ) : (
-          <button className="cta" onClick={() => setOpen(!open)} title={user?.email || ''} style={{ padding: '8px 10px' }}>
-            <span style={{ display: 'inline-flex', width: 24, height: 24, borderRadius: 999, background: '#1e293b', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>{initial()}</span>
-          </button>
-        )} */}
+
       {!user ? (
         <button
           style={{
@@ -92,92 +73,46 @@ export default function LoginWidget() {
             transition: 'all 0.3s'
           }}
           className="cta"
-          onClick={() => setOpen(!open)}
+          onClick={() => setOpen(true)}
         >
           <LogIn size={16} /> Sign in
         </button>
       ) : (
-        <div
-          onClick={() => setOpen(!open)}
-          title={user?.email || ''}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            // backgroundColor: '#0f172a',
-            border: '1.5px solid #b8935f',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 600,
-            fontSize: '0.9rem',
-            color: '#b8935f',
-            cursor: 'pointer',
-            transition: 'all 0.25s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(184, 147, 95, 0.08)';
-            e.currentTarget.style.borderColor = '#c9a sixteen';
-          }}
-          onMouseLeave={(e) => {
-            // e.currentTarget.style.backgroundColor = '#0f172a';
-            // e.currentTarget.style.borderColor = '#b8935f';
-          }}
-        >
-          {initial()}
-        </div>
+        <Link href="/profile">
+          <div
+            onClick={() => setEmailOpen(true)}
+            title={user?.email || ''}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              // backgroundColor: '#0f172a',
+              border: '1.5px solid #b8935f',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              color: '#b8935f',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(184, 147, 95, 0.08)';
+              e.currentTarget.style.borderColor = '#c9a sixteen';
+            }}
 
-        // <div
-        //   onClick={() => setOpen(!open)}
-        //   title={user?.email || ''}
-        //   style={{
-        //     width: 36,
-        //     height: 36,
-        //     borderRadius: '50%',
-        //     background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-        //     color: '#0f172a',
-        //     display: 'flex',
-        //     alignItems: 'center',
-        //     justifyContent: 'center',
-        //     fontWeight: '700',
-        //     cursor: 'pointer',
-        //     transition: 'transform 0.2s ease',
-        //   }}
-        //   onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-        //   onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        // >
-        //   {initial()}
-        // </div>
+          >
+            {initial()}
+          </div>
+        </Link>
       )}
-
       {open && (
-        <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, zIndex: 40, background: '#0f1720', border: '1px solid #1e293b', borderRadius: 12, padding: 10, minWidth: 240 }} onMouseLeave={() => setOpen(false)}>
-          {!user ? (
-            <div style={{ display: 'grid', gap: 8 }}>
-              <button className="cta primary" style={{ cursor: 'pointer' }} onClick={google}>Continue with Google</button>
-              <button className="cta" style={{ cursor: 'pointer' }} onClick={() => setEmailOpen(true)}>Sign in with Email</button>
-              <div style={{ fontSize: 12, color: '#9fb3c8' }}>By continuing, you agree to our community guidelines.</div>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gap: 8 }}>
-              {/* <Link className="cta" href="/me">My Profile</Link> */}
-              <button className="cta ghost" onClick={() => signOut(auth)}>Sign out</button>
-            </div>
-          )}
+        <div>
+          <AuthModal open={open} onClose={() => setOpen(false)} onSelect={handleSelect} />
         </div>
       )}
-      {emailOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 'calc(100% + 8px)',
-            zIndex: 50,
-          }}
-        >
-          <AuthModal open={emailOpen} onClose={() => setEmailOpen(false)} onSelect={handleSelect} />
-        </div>
-      )}
+
     </div>
   )
 }

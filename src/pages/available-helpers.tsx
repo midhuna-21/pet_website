@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import AvailableHelpersPageUI from "../components/AvailableHelpersPage";
 import { getAvailableHelpers } from "../hooks/firestoreaction";
 import SendRequestModal from "../components/SendRequestModal";
+import Loading from "../components/Loading";
 
 export default function AvailableHelpersRoute() {
   const [availableHelpers, setAvailableHelpers] = useState([]);
@@ -28,9 +29,7 @@ export default function AvailableHelpersRoute() {
 
   if (loading) {
     return (
-      <p style={{ color: "white", textAlign: "center", marginTop: 30 }}>
-        Loading helpers...
-      </p>
+     <Loading />
     );
   }
 

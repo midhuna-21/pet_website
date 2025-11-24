@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import RequestsPageUI from "../components/RequestsPage";
 import { getIncomingRequests, updateRequestStatus } from "../hooks/firestoreaction";
+import Loading from "../components/Loading";
 
 export default function RequestsRoute() {
   const [requests, setRequests] = useState([]);
@@ -17,7 +18,7 @@ export default function RequestsRoute() {
   }, []);
 
   if (loading) {
-    return <p style={{ color: "white", textAlign: "center" }}>Loading requests...</p>;
+    return <Loading />;
   }
 
   return (

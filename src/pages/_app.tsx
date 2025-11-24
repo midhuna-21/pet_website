@@ -9,9 +9,9 @@ import { listenForegroundNotifications } from '../lib/notifications'
 import { auth } from '../lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 
-// Sentry (client + server)
 import '../lib/sentry.server'
 import Sentry from '../lib/sentry.client'
+import Footer from '../components/Footer'
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
@@ -30,8 +30,9 @@ export default function App({ Component, pageProps }: AppProps) {
     return () => unsub()
   }, [router])
   return (<>
-  <Header />  
+    <Header />
     <div className=""><Component {...pageProps} /></div>
-    <div className="footer"><div className="container">© StrayPals v15.4</div></div>
+    {/* <div className="footer"><div className="container">© StrayPals v15.4</div></div> */}
+    <Footer />
   </>)
 }

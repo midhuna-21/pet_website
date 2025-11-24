@@ -1,9 +1,1 @@
-{
-  "/_app": "pages/_app.js",
-  "/_error": "pages/_error.js",
-  "/_document": "pages/_document.js",
-  "/strays": "pages/strays.js",
-  "/pass-the-bowl": "pages/pass-the-bowl.js",
-  "/tasks": "pages/tasks.js",
-  "/community": "pages/community.js"
-}
+{"/_app":"pages/_app.js","/admin/moderation-covers":"pages/admin/moderation-covers.html","/available-helpers":"pages/available-helpers.html","/admin/cms-copy":"pages/admin/cms-copy.html","/_document":"pages/_document.js","/community":"pages/community.html","/dashboard":"pages/dashboard.html","/admin/stations-dashboard":"pages/admin/stations-dashboard.html","/admin/referrals-analytics":"pages/admin/referrals-analytics.html","/admin/stations":"pages/admin/stations.html","/dog/[id]":"pages/dog/[id].html","/":"pages/index.html","/_error":"pages/_error.js","/map":"pages/map.html","/me":"pages/me.html","/pass-the-bowl":"pages/pass-the-bowl.html","/posters":"pages/posters.html","/requests":"pages/requests.html","/station/[id]":"pages/station/[id].html","/report":"pages/report.html","/sos":"pages/sos.html","/stations":"pages/stations.html","/profile":"pages/profile.html","/tasks":"pages/tasks.html","/strays":"pages/strays.html","/404":"pages/404.html"}

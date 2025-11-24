@@ -1,358 +1,406 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  LineChart,
-  Line,
-} from "recharts";
-import {
-  getDocs,
-  collection,
-  query,
-  where,
-} from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { db } from "../lib/firebase";
-import Header from "../components/Header";
+  import React, { useEffect, useState } from "react";
+  import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    CartesianGrid,
+    LineChart,
+    Line,
+  } from "recharts";
+  import {
+    getDocs,
+    collection,
+    query,
+    where,
+  } from "firebase/firestore";
+  import { getAuth, onAuthStateChanged } from "firebase/auth";
+  import { db } from "../lib/firebase";
+  import Header from "../components/Header";
 
-const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+  const MONTHS = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
 
-export default function Dashboard() {
-  const [uid, setUid] = useState<string | null>(null);
+  export default function Dashboard() {
+    const [uid, setUid] = useState<string | null>(null);
 
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [totalStrayReported, setTotalStrayReported] = useState(0);
-  const [totalStrayReportedByYou, setTotalStrayReportedByYou] = useState(0);
-  const [totalAccepted, setTotalAccepted] = useState(0);
-  const [totalDeclined, setTotalDeclined] = useState(0);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const [totalStrayReported, setTotalStrayReported] = useState(0);
+    const [totalStrayReportedByYou, setTotalStrayReportedByYou] = useState(0);
+    const [totalAccepted, setTotalAccepted] = useState(0);
+    const [totalDeclined, setTotalDeclined] = useState(0);
 
-  const [monthlyData, setMonthlyData] = useState(
-    MONTHS.map((m) => ({ month: m, reports: 0 }))
-  );
+    const [monthlyData, setMonthlyData] = useState(
+      MONTHS.map((m) => ({ month: m, reports: 0 }))
+    );
 
-  const [trendData, setTrendData] = useState(
-    MONTHS.map((m) => ({ month: m, reports: 0 }))
-  );
+    const [trendData, setTrendData] = useState(
+      MONTHS.map((m) => ({ month: m, reports: 0 }))
+    );
 
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
 
-  // Utility to safely parse Firestore Timestamp
-  function parseCreatedAtToDate(createdAt: any): Date | null {
-    if (!createdAt) return null;
+    // Utility to safely parse Firestore Timestamp
+    function parseCreatedAtToDate(createdAt: any): Date | null {
+      if (!createdAt) return null;
 
-    if (createdAt?.toDate) {
-      try {
-        return createdAt.toDate();
-      } catch {}
-    }
-    if (createdAt?.seconds) return new Date(createdAt.seconds * 1000);
-
-    if (typeof createdAt === "string") {
-      const d = new Date(createdAt);
-      return isNaN(d.getTime()) ? null : d;
-    }
-
-    return null;
-  }
-
-  // AUTH LISTENER
-  useEffect(() => {
-    const auth = getAuth();
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setUid(user?.uid || null);
-    });
-    return () => unsub();
-  }, []);
-
-  // GENERAL COUNTS + COMMUNITY MONTHLY GRAPH
-  useEffect(() => {
-    const fetchGeneral = async () => {
-      setLoading(true);
-
-      try {
-        // Users count
-        const usersSnap = await getDocs(collection(db, "users"));
-        setTotalUsers(usersSnap.size);
-
-        // All stray reports count + compute monthly community data
-        const petsSnap = await getDocs(collection(db, "pets"));
-        setTotalStrayReported(petsSnap.size);
-
-        const allCounts = new Array(12).fill(0);
-
-        petsSnap.docs.forEach((doc) => {
-          const data = doc.data();
-          const dt = parseCreatedAtToDate(data.createdAt) || new Date();
-          const m = dt.getMonth();
-          allCounts[m]++;
-        });
-
-        setTrendData(
-          MONTHS.map((m, i) => ({
-            month: m,
-            reports: allCounts[i] || 0,
-          }))
-        );
-      } catch (err) {
-        console.error("Error loading general data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGeneral();
-  }, []);
-
-  // USER SPECIFIC COUNTS + USER MONTHLY GRAPH
-  useEffect(() => {
-    if (!uid) return;
-
-    const fetchUserData = async () => {
-      try {
-        // Fetch user's reports
-        const qUser = query(collection(db, "pets"), where("userId", "==", uid));
-        const petsSnap = await getDocs(qUser);
-
-        setTotalStrayReportedByYou(petsSnap.size);
-
-        // Monthly user counts
-        const userCounts = new Array(12).fill(0);
-
-        petsSnap.docs.forEach((doc) => {
-          const data = doc.data();
-          const dt = parseCreatedAtToDate(data.createdAt) || new Date();
-          const m = dt.getMonth();
-          userCounts[m]++;
-        });
-
-        setMonthlyData(
-          MONTHS.map((m, i) => ({
-            month: m,
-            reports: userCounts[i] || 0,
-          }))
-        );
-
-        // Accepted Requests
+      if (createdAt?.toDate) {
         try {
-          const qAccepted = query(
-            collection(db, "request"),
-            where("userId", "==", uid),
-            where("status", "==", "accepted")
-          );
-          const acceptedSnap = await getDocs(qAccepted);
-          setTotalAccepted(acceptedSnap.size);
-        } catch {
-          setTotalAccepted(0);
-        }
-
-        // Declined Requests
-        try {
-          const qDeclined = query(
-            collection(db, "request"),
-            where("userId", "==", uid),
-            where("status", "==", "declined")
-          );
-          const declinedSnap = await getDocs(qDeclined);
-          setTotalDeclined(declinedSnap.size);
-        } catch {
-          setTotalDeclined(0);
-        }
-      } catch (err) {
-        console.error("Error loading user data:", err);
+          return createdAt.toDate();
+        } catch {}
       }
-    };
+      if (createdAt?.seconds) return new Date(createdAt.seconds * 1000);
 
-    fetchUserData();
-  }, [uid]);
+      if (typeof createdAt === "string") {
+        const d = new Date(createdAt);
+        return isNaN(d.getTime()) ? null : d;
+      }
 
-  const formatTooltip = (value: any) =>
-    `${value} report${value === 1 ? "" : "s"}`;
+      return null;
+    }
 
-  return (
-    <div style={{ background: "#000", minHeight: "100vh", color: "#fff" }}>
-   
+    // DETECT MOBILE/TABLET
+    useEffect(() => {
+      const handleResize = () => {
+        setIsMobile(window.innerWidth < 1024);
+      };
 
-      <div
-        style={{
-          padding: "40px 20px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          marginTop: "50px",
-          marginBottom: "50px",
-        }}
-      >
-        {/* TITLE */}
-        <h1
-          style={{
-            fontFamily: "Playfair Display",
-            fontSize: 42,
-            fontWeight: 700,
-            marginBottom: 8,
-          }}
-        >
-          Dashboard Overview
-        </h1>
+      handleResize();
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
-        <p
-          style={{
-            color: "rgba(255,255,255,0.55)",
-            marginBottom: 30,
-            fontSize: 17,
-            lineHeight: 1.6,
-          }}
-        >
-          A quick look at how you and the community are helping strays.
-        </p>
+    // AUTH LISTENER
+    useEffect(() => {
+      const auth = getAuth();
+      const unsub = onAuthStateChanged(auth, (user) => {
+        setUid(user?.uid || null);
+      });
+      return () => unsub();
+    }, []);
 
-        {/* METRIC BOXES */}
+    // GENERAL COUNTS + COMMUNITY MONTHLY GRAPH
+    useEffect(() => {
+      const fetchGeneral = async () => {
+        setLoading(true);
+
+        try {
+          // Users count
+          const usersSnap = await getDocs(collection(db, "users"));
+          setTotalUsers(usersSnap.size);
+
+          // All stray reports count + compute monthly community data
+          const petsSnap = await getDocs(collection(db, "pets"));
+          setTotalStrayReported(petsSnap.size);
+
+          const allCounts = new Array(12).fill(0);
+
+          petsSnap.docs.forEach((doc) => {
+            const data = doc.data();
+            const dt = parseCreatedAtToDate(data.createdAt) || new Date();
+            const m = dt.getMonth();
+            allCounts[m]++;
+          });
+
+          setTrendData(
+            MONTHS.map((m, i) => ({
+              month: m,
+              reports: allCounts[i] || 0,
+            }))
+          );
+        } catch (err) {
+          console.error("Error loading general data:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchGeneral();
+    }, []);
+
+    // USER SPECIFIC COUNTS + USER MONTHLY GRAPH
+    useEffect(() => {
+      if (!uid) return;
+
+      const fetchUserData = async () => {
+        try {
+          // Fetch user's reports
+          const qUser = query(collection(db, "pets"), where("userId", "==", uid));
+          const petsSnap = await getDocs(qUser);
+
+          setTotalStrayReportedByYou(petsSnap.size);
+
+          // Monthly user counts
+          const userCounts = new Array(12).fill(0);
+
+          petsSnap.docs.forEach((doc) => {
+            const data = doc.data();
+            const dt = parseCreatedAtToDate(data.createdAt) || new Date();
+            const m = dt.getMonth();
+            userCounts[m]++;
+          });
+
+          setMonthlyData(
+            MONTHS.map((m, i) => ({
+              month: m,
+              reports: userCounts[i] || 0,
+            }))
+          );
+
+          // Accepted Requests
+          try {
+            const qAccepted = query(
+              collection(db, "request"),
+              where("userId", "==", uid),
+              where("status", "==", "accepted")
+            );
+            const acceptedSnap = await getDocs(qAccepted);
+            setTotalAccepted(acceptedSnap.size);
+          } catch {
+            setTotalAccepted(0);
+          }
+
+          // Declined Requests
+          try {
+            const qDeclined = query(
+              collection(db, "request"),
+              where("userId", "==", uid),
+              where("status", "==", "declined")
+            );
+            const declinedSnap = await getDocs(qDeclined);
+            setTotalDeclined(declinedSnap.size);
+          } catch {
+            setTotalDeclined(0);
+          }
+        } catch (err) {
+          console.error("Error loading user data:", err);
+        }
+      };
+
+      fetchUserData();
+    }, [uid]);
+
+    const formatTooltip = (value: any) =>
+      `${value} report${value === 1 ? "" : "s"}`;
+
+    return (
+      <div style={{ background: "#000", minHeight: "100vh", color: "#fff" }}>
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-            gap: 16,
-            marginBottom: 40,
+            padding: isMobile ? "20px 12px" : "40px 20px",
+            maxWidth: "1100px",
+            margin: "0 auto",
+            marginTop: isMobile ? "30px" : "50px",
+            marginBottom: isMobile ? "30px" : "50px",
           }}
         >
-          {[
-            { label: "Total Users", value: totalUsers },
-            { label: "Total Strays", value: totalStrayReported },
-            { label: "You Reported", value: totalStrayReportedByYou },
-            { label: "Accepted", value: totalAccepted },
-            { label: "Declined", value: totalDeclined },
-          ].map((card, i) => (
+          {/* TITLE */}
+          <h1
+            style={{
+              fontFamily: "Playfair Display",
+              fontSize: isMobile ? 24 : 42,
+              fontWeight: 700,
+              marginBottom: 8,
+            }}
+          >
+            Dashboard Overview
+          </h1>
+
+          <p
+            style={{
+              color: "rgba(255,255,255,0.55)",
+              marginBottom: isMobile ? 20 : 30,
+              fontSize: isMobile ? 13 : 17,
+              lineHeight: 1.6,
+            }}
+          >
+            A quick look at how you and the community are helping strays.
+          </p>
+
+          {/* METRIC BOXES */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "repeat(auto-fit, minmax(90px, 1fr))"
+                : "repeat(auto-fit, minmax(140px, 1fr))",
+              gap: isMobile ? 10 : 16,
+              marginBottom: isMobile ? 25 : 40,
+            }}
+          >
+            {[
+              { label: "Total Users", value: totalUsers },
+              { label: "Total Strays", value: totalStrayReported },
+              { label: "You Reported", value: totalStrayReportedByYou },
+              { label: "Accepted", value: totalAccepted },
+              { label: "Declined", value: totalDeclined },
+            ].map((card, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: isMobile ? "12px 12px" : "16px 18px",
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.4)",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: isMobile ? 10 : 13,
+                    color: "rgba(255,255,255,0.55)",
+                    paddingBottom: 6,
+                    borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  {card.label}
+                </span>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: isMobile ? 16 : 22,
+                    fontWeight: 700,
+                    color: "#d8c48d",
+                  }}
+                >
+                  {card.value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* GRAPH GRID - STACKS ON MOBILE/TABLET */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1.1fr",
+              gap: isMobile ? 20 : 24,
+            }}
+          >
+            {/* USER MONTHLY BAR CHART */}
             <div
-              key={i}
               style={{
-                padding: "16px 18px",
-                borderRadius: 12,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                boxShadow: "0 6px 20px rgba(0,0,0,0.4)",
-                display: "flex",
-                flexDirection: "column",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: isMobile ? 14 : 20,
+                borderRadius: 16,
+                boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+                order: isMobile ? 1 : 0,
               }}
             >
-              <span
+              <h3
                 style={{
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.55)",
-                  paddingBottom: 6,
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  fontFamily: "Playfair Display",
+                  fontSize: isMobile ? 16 : 22,
+                  marginBottom: isMobile ? 12 : 16,
                 }}
               >
-                {card.label}
-              </span>
+                Your Reports by Month
+              </h3>
 
-              <div
-                style={{
-                  marginTop: 10,
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: "#d8c48d",
-                }}
-              >
-                {card.value}
+              <div style={{ width: "100%", height: isMobile ? 250 : 300, position: "relative" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={monthlyData} 
+                    margin={isMobile ? { top: 10, right: 20, left: 0, bottom: 30 } : { top: 5, right: 30, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid stroke="#1b1b1b" vertical={false} />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="#888" 
+                      tick={{ fontSize: isMobile ? 11 : 12, fill: "#ccc" }}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                      height={isMobile ? 60 : 30}
+                    />
+                    <YAxis 
+                      stroke="#888" 
+                      allowDecimals={false}
+                      tick={{ fontSize: isMobile ? 11 : 12, fill: "#ccc" }}
+                      width={isMobile ? 30 : 40}
+                    />
+                    <Tooltip 
+                      formatter={formatTooltip} 
+                      contentStyle={{ fontSize: isMobile ? 12 : 14, backgroundColor: "#1a1a1a", border: "1px solid #444" }} 
+                      cursor={{ fill: "rgba(216, 196, 141, 0.1)" }}
+                    />
+                    <Bar
+                      dataKey="reports"
+                      fill="#d8c48d"
+                      radius={[6, 6, 0, 0]}
+                      barSize={isMobile ? 14 : 18}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* TWO GRAPH GRID */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1.1fr",
-            gap: 24,
-          }}
-        >
-          {/* USER MONTHLY BAR CHART */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              padding: 20,
-              borderRadius: 16,
-              boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
-            }}
-          >
-            <h3
+            {/* COMMUNITY LINE GRAPH */}
+            <div
               style={{
-                fontFamily: "Playfair Display",
-                fontSize: 22,
-                marginBottom: 16,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: isMobile ? 14 : 20,
+                borderRadius: 16,
+                boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+                order: isMobile ? 2 : 0,
               }}
             >
-              Your Reports by Month
-            </h3>
+              <h3
+                style={{
+                  fontFamily: "Playfair Display",
+                  fontSize: isMobile ? 16 : 22,
+                  marginBottom: isMobile ? 12 : 16,
+                }}
+              >
+                Community Monthly Trend
+              </h3>
 
-            <div style={{ width: "100%", height: 300 }}>
-              <ResponsiveContainer>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid stroke="#1b1b1b" vertical={false} />
-                  <XAxis dataKey="month" stroke="#ccc" />
-                  <YAxis stroke="#ccc" allowDecimals={false} />
-                  <Tooltip formatter={formatTooltip} />
-                  <Bar
-                    dataKey="reports"
-                    fill="#d8c48d"
-                    radius={[6, 6, 0, 0]}
-                    barSize={18}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* COMMUNITY LINE GRAPH */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              padding: 20,
-              borderRadius: 16,
-              boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
-            }}
-          >
-            <h3
-              style={{
-                fontFamily: "Playfair Display",
-                fontSize: 22,
-                marginBottom: 16,
-              }}
-            >
-              Community Monthly Trend
-            </h3>
-
-            <div style={{ width: "100%", height: 300 }}>
-              <ResponsiveContainer>
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis dataKey="month" stroke="#ccc" />
-                  <YAxis stroke="#ccc" />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="reports"
-                    stroke="#d8c48d"
-                    strokeWidth={2}
-                    dot={{ r: 3, fill: "#d8c48d" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={{ width: "100%", height: isMobile ? 280 : 300, position: "relative" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart 
+                    data={trendData} 
+                    margin={isMobile ? { top: 10, right: 20, left: 0, bottom: 30 } : { top: 5, right: 30, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="#888"
+                      tick={{ fontSize: isMobile ? 11 : 12, fill: "#ccc" }}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                      height={isMobile ? 60 : 30}
+                    />
+                    <YAxis 
+                      stroke="#888"
+                      tick={{ fontSize: isMobile ? 11 : 12, fill: "#ccc" }}
+                      width={isMobile ? 30 : 40}
+                    />
+                    <Tooltip contentStyle={{ fontSize: isMobile ? 12 : 14, backgroundColor: "#1a1a1a", border: "1px solid #444" }} />
+                    <Line
+                      type="monotone"
+                      dataKey="reports"
+                      stroke="#d8c48d"
+                      strokeWidth={2}
+                      dot={{ r: isMobile ? 3 : 3, fill: "#d8c48d" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
+        
       </div>
-    </div>
-  );
-}
+    );
+  }

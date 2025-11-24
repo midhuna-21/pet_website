@@ -5,6 +5,7 @@ import { MapPin, Clock } from "lucide-react";
 import { db } from "../lib/firebase";
 import { collection, getDocs, doc, getDoc, orderBy, query } from "firebase/firestore";
 import AuthModal from "../components/AuthModal";
+import Loading from "../components/Loading";
 
 interface Pet {
     id: string;
@@ -14,7 +15,13 @@ interface Pet {
     createdAt?: { seconds: number };
     userId?: string;
     reporterName?: string;
+
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
 }
+
 
 export default function SpottedPage() {
     const [showAuthModal, setShowAuthModal] = useState(false);
@@ -24,6 +31,13 @@ export default function SpottedPage() {
     const handleSelectLocation = (place: any) => {
         console.log("User selected location:", place);
     };
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+    const totalPages = Math.ceil(reports.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentItems = reports.slice(startIndex, startIndex + itemsPerPage);
+
 
     useEffect(() => {
         const fetchReports = async () => {
@@ -77,10 +91,26 @@ export default function SpottedPage() {
         return date.toLocaleDateString();
     };
 
+
+    const handleDirections = (lat?: number, lng?: number) => {
+        if (!lat || !lng) return;
+
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        window.open(url, "_blank");
+    };
+
+
+
     return (
-        <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }}>
-
-
+        <div
+            style={{
+                marginTop: "100px",
+                marginBottom: "50px",
+                minHeight: "100vh",
+                position: "relative",
+                overflow: "hidden",
+            }}
+        >
             {showAuthModal && (
                 <div
                     style={{
@@ -121,27 +151,16 @@ export default function SpottedPage() {
 
                 /* ---------- YOUR REQUESTED CHANGES ---------- */
 
-                /* TABLET title smaller */
-                @media (max-width: 1024px) {
-                    .section-title {
-                        font-size: 26px !important;
-                    }
-                    .section-subtitle {
-                        line-height: 1.4 !important;
-                    }
-                    .section-container {
-                        margin-bottom: 35px !important;
-                    }
-                }
-
                 /* MOBILE title even smaller */
                 @media (max-width: 640px) {
                     .section-title {
                         font-size: 22px !important;
+                         line-height: 1.1 !important;
                     }
                     .section-subtitle {
-                        font-size: 15px !important;
-                        line-height: 1.4 !important;
+                           font-size:9px !important;
+                           line-height: 1.2 !important;
+                           margin-top: 5px !important;
                     }
                     .section-container {
                         margin-bottom: 30px !important;
@@ -149,26 +168,50 @@ export default function SpottedPage() {
                 }
                 `}
             </style>
+<style jsx global>{`
+  /* FIXED HEIGHT GRID WRAPPER FOR DESKTOP */
+  .grid-wrapper {
+    min-height: 560px; /* fits 2 rows of cards */
+    display: flex;
+    align-items: flex-start;
+  }
+
+  /* TABLET */
+  @media (max-width: 1024px) {
+    .grid-wrapper {
+      min-height: auto; /* allow natural resizing */
+    }
+  }
+
+  /* MOBILE */
+  @media (max-width: 640px) {
+    .grid-wrapper {
+      min-height: auto;
+    }
+  }
+`}</style>
 
 
             <div
                 style={{
                     maxWidth: "1100px",
                     margin: "0 auto",
-                    padding: "80px 24px",
                 }}
             >
 
                 {/* SECTION TITLE */}
-                <div className="section-container" style={{ marginBottom: "60px", textAlign: "center" }}>
+                <div className="section-container" style={{ marginBottom: "40px", textAlign: "center" }}>
                     <h1
                         className="section-title"
                         style={{
-                            fontSize: "46px",   // desktop size (unchanged)
-                            fontWeight: 700,
-                            color: "#ffffff",
+                            fontSize: "52px",
+                            color: "#fff",
                             fontFamily: "Playfair Display",
-                            marginBottom: "14px",
+                            fontWeight: 700,
+                            marginBottom: "10px",
+                            marginTop: "10px",
+                            lineHeight: "1.1",
+                            letterSpacing: "-1px",
                         }}
                     >
                         Aww, Look Who We Ran Into!
@@ -181,7 +224,7 @@ export default function SpottedPage() {
                             color: "rgba(255,255,255,0.65)",
                             maxWidth: "580px",
                             margin: "0 auto",
-                            lineHeight: "1.7",
+                            lineHeight: "1.1",
                         }}
                     >
                         These sweet babies were seen around. Let’s make sure they’re okay.
@@ -190,17 +233,18 @@ export default function SpottedPage() {
 
 
                 {/* GRID */}
-                <div
-                    className="responsive-grid"
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: "24px",
-                        justifyItems: "center",
-                    }}
-                >
+              <div className="grid-wrapper">
+  <div
+    className="responsive-grid"
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(3, 1fr)",
+      gap: "24px",
+      justifyItems: "center",
+    }}
+  >
 
-                    {reports.map((item) => (
+                    {currentItems.map((item) => (
                         <div
                             key={item.id}
                             className="card"
@@ -237,6 +281,7 @@ export default function SpottedPage() {
                                 />
 
                                 <div
+                                    className="needs-you-badge"
                                     style={{
                                         position: "absolute",
                                         top: "16px",
@@ -251,7 +296,6 @@ export default function SpottedPage() {
                                 >
                                     Needs You
                                 </div>
-
                                 <div
                                     style={{
                                         position: "absolute",
@@ -287,8 +331,13 @@ export default function SpottedPage() {
                                             marginBottom: "10px",
                                         }}
                                     >
-                                        <MapPin size={16} color="var(--gold-light)" />
+                                        <MapPin
+                                            size={16}
+                                            color="var(--gold-light)"
+                                            className="mobile-location-icon"
+                                        />
                                         <span
+                                            className="mobile-location-text"
                                             style={{
                                                 fontSize: "13px",
                                                 color: "rgba(255,255,255,0.85)",
@@ -302,7 +351,9 @@ export default function SpottedPage() {
                                         </span>
                                     </div>
 
+
                                     <span
+                                        className="mobile-reporter"
                                         style={{
                                             fontSize: "12px",
                                             color: "rgba(255,255,255,0.55)",
@@ -313,6 +364,7 @@ export default function SpottedPage() {
                                     </span>
 
                                     <div
+                                        className="mobile-time"
                                         style={{
                                             display: "flex",
                                             alignItems: "center",
@@ -326,7 +378,10 @@ export default function SpottedPage() {
                                         <span>{getTimeAgo(item.createdAt)}</span>
                                     </div>
 
+
                                     <button
+                                        className="mobile-directions-btn"
+                                        onClick={() => handleDirections(item.coordinates?.lat, item.coordinates?.lng)}
                                         style={{
                                             padding: "10px 14px",
                                             background: "rgba(255,255,255,0.08)",
@@ -340,18 +395,10 @@ export default function SpottedPage() {
                                             transition: "0.25s",
                                             width: "fit-content",
                                         }}
-                                        onClick={() => {
-                                            if (item.location) {
-                                                const encoded = encodeURIComponent(item.location);
-                                                window.open(
-                                                    `https://www.google.com/maps/search/?api=1&query=${encoded}`,
-                                                    "_blank"
-                                                );
-                                            }
-                                        }}
                                     >
                                         Get Directions →
                                     </button>
+
 
                                 </div>
                             </div>
@@ -359,8 +406,132 @@ export default function SpottedPage() {
                     ))}
 
                 </div>
+                </div>
+                {/* SHOW PAGINATION ONLY IF MORE THAN 1 PAGE */}
+                {totalPages > 1 && (
+                    <div
+                        style={{
+                            marginTop: "40px",
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: "10px",
+                            alignItems: "center",
+                        }}
+                    >
+                        {/* LEFT ARROW */}
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                            disabled={currentPage === 1}
+                            style={{
+                                padding: "8px 12px",
+                                borderRadius: "8px",
+                                background:
+                                    currentPage === 1 ? "rgba(255,255,255,0.1)" : "var(--gold-light)",
+                                color: currentPage === 1 ? "#666" : "#000",
+                                border: "none",
+                                fontSize: "16px",
+                                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                                transition: "0.25s",
+                                fontWeight: 700,
+                            }}
+                        >
+                            ◀
+                        </button>
+
+                        {/* PAGE NUMBERS */}
+                        {[...Array(totalPages)].map((_, i) => {
+                            const page = i + 1;
+                            const active = page === currentPage;
+
+                            return (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    style={{
+                                        padding: "8px 12px",
+                                        borderRadius: "8px",
+                                        border: active
+                                            ? "2px solid var(--gold-light)"
+                                            : "1px solid rgba(255,255,255,0.25)",
+                                        background: active ? "rgba(184,156,88,0.12)" : "transparent",
+                                        color: "#fff",
+                                        fontWeight: active ? 700 : 500,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    {page}
+                                </button>
+                            );
+                        })}
+
+                        {/* RIGHT ARROW */}
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            style={{
+                                padding: "8px 12px",
+                                borderRadius: "8px",
+                                background:
+                                    currentPage === totalPages
+                                        ? "rgba(255,255,255,0.1)"
+                                        : "var(--gold-light)",
+                                color: currentPage === totalPages ? "#666" : "#000",
+                                border: "none",
+                                fontSize: "16px",
+                                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                                transition: "0.25s",
+                                fontWeight: 700,
+                            }}
+                        >
+                            ▶
+                        </button>
+                    </div>
+                )}
 
             </div>
+            <style jsx global>{`
+  /* MOBILE ONLY (max-width: 480px) */
+  @media (max-width: 480px) {
+    .card .mobile-location-icon {
+      width: 12px !important;
+      height: 12px !important;
+    }
+
+    .card .mobile-location-text {
+      font-size: 11px !important;
+      max-width: 160px !important;
+    }
+
+    .card .mobile-reporter {
+      font-size: 10px !important;
+    }
+
+    .card .mobile-time {
+      font-size: 10px !important;
+    }
+
+    .card .mobile-time svg {
+      width: 12px !important;
+      height: 12px !important;
+    }
+
+    .card .mobile-directions-btn {
+      padding: 6px 10px !important;
+      font-size: 10px !important;
+      border-radius: 6px !important;
+    }
+      
+    .needs-you-badge {
+      padding: 3px 10px !important;
+      font-size: 10px !important;
+      border-radius: 12px !important;
+      top: 10px !important;
+      right: 10px !important;
+    
+  }
+  }
+`}</style>
+            {loading && <Loading />}
         </div>
     );
 }

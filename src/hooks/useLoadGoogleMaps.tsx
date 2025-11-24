@@ -44,21 +44,19 @@ export default function GooglePlacesAutocomplete({
   }, [onSelect]);
 
   return (
-    <input
-      ref={inputRef}
-      type="text"
-      placeholder="Search for a location..."
-      className="small-placeholder"
+    
+<input
+  ref={inputRef}
+  type="text"
+  placeholder="Search for a location..."
+  className="location-input"
+
       style={{
         width: '100%',
         flex: 1,
         padding: '14px 18px',
         background: 'rgba(15, 23, 42, 0.6)',
-        border: error
-          ? '1px solid #ef4444'
-          : isFocused
-            ? '1px solid #10b981'
-            : '1px solid rgba(71, 85, 105, 0.5)',
+      
         borderRadius: '12px',
         fontSize: '16px',
         color: '#ffffff',

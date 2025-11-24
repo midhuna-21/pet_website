@@ -7,8 +7,9 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db, googleProvider } from "../lib/firebase";
+import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 
 type Props = {
   open: boolean;
@@ -37,9 +38,6 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  /* ---------------------------------------------
-        GOOGLE AUTOCOMPLETE
-  ---------------------------------------------- */
   useEffect(() => {
     if (!open || mode !== "signup") return;
 
@@ -81,7 +79,7 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
       script.onload = initAutocomplete;
       document.body.appendChild(script);
     } else initAutocomplete();
-  }, [open, mode, onSelect]);
+  }, [open, onSelect]);
 
   /* ---------------------------------------------
         DISABLE SCROLL
@@ -95,21 +93,34 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
     };
   }, [open]);
 
-  /* ---------------------------------------------
-        AUTH SUBMIT
-  ---------------------------------------------- */
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
+
+    if (mode === "signup") {
+      if (!name.trim() || !email.trim() || !password.trim() || !location.trim()) {
+        setErr("Please fill all required fields.");
+        return;
+      }
+
+      const strongPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+      if (!strongPassword.test(password)) {
+        setErr("Enter a stronger password (min 6 chars, include letters & numbers).");
+        return;
+      }
+    } else {
+      if (!email.trim() || !password.trim()) {
+        setErr("Invalid email or password.");
+        return;
+      }
+    }
+
     setBusy(true);
 
     try {
       if (mode === "signup") {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
         await updateProfile(user, { displayName: name });
@@ -122,32 +133,123 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
           lng: selectedLocation?.lng ?? null,
           createdAt: new Date().toISOString(),
         });
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
 
-      onClose();
+        onClose();
+      } else {
+        // Sign In
+        await signInWithEmailAndPassword(auth, email, password);
+        onClose();
+      }
     } catch (error: any) {
-      setErr(error.message || "Authentication failed");
+      const code = error?.code || "";
+      if (mode === "signup" && code === "auth/email-already-in-use") {
+        setErr("User already exists.");
+      } else if (mode === "signin" && (code === "auth/user-not-found" || code === "auth/wrong-password")) {
+        setErr("Invalid email or password.");
+      } else {
+        setErr("Something went wrong, please try again.");
+      }
     } finally {
       setBusy(false);
     }
   };
 
+async function google() {
+  setErr(""); // clear previous errors
+
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+
+    await setDoc(
+      doc(db, 'users', user.uid),
+      {
+        uid: user.uid,
+        name: user.displayName || '',
+        email: user.email || '',
+        photoURL: user.photoURL || '',
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    onClose();
+
+  } catch (error: any) {
+    console.error("Google sign-in failed:", error);
+
+    const code = error.code || "";
+
+    // Smoothed, user-friendly error messages
+    if (code === "auth/popup-closed-by-user") {
+      setErr("Google sign-in was cancelled.");
+    } else if (code === "auth/network-request-failed") {
+      setErr("Network issue — please check your connection and try again.");
+    } else if (code === "auth/internal-error") {
+      setErr("Server issue — please try again in a moment.");
+    } else {
+      setErr("Unable to sign in with Google. Please try again.");
+    }
+  }
+}
+
+
+  // async function google() {
+  //   try {
+  //     const result = await signInWithPopup(auth, googleProvider);
+  //     const user = result.user;
+
+  //     await setDoc(
+  //       doc(db, 'users', user.uid),
+  //       {
+  //         uid: user.uid,
+  //         name: user.displayName || '',
+  //         email: user.email || '',
+  //         photoURL: user.photoURL || '',
+  //         createdAt: serverTimestamp(),
+  //         lastLogin: serverTimestamp(),
+  //       },
+  //       { merge: true }
+  //     );
+
+  //     console.log('✅ User saved to Firestore:', user.email);
+  //   } catch (e: any) {
+  //     console.error('❌ Google sign-in failed:', e);
+  //     alert(e?.message || 'Google sign-in failed');
+  //   }
+  // }
+
   if (!open) return null;
+  /* ---------------------------------------------
+      RESET FORM WHEN MODAL OPENS
+---------------------------------------------- */
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setEmail("");
+      setPassword("");
+      setLocation("");
+      setSelectedLocation(null);
+      setErr("");
+      setShowPassword(false);
+    }
+  }, [open]);
+
 
   /* ---------------------------------------------
-        SHARED INPUT STYLE
+        UNIFIED INPUT STYLE
   ---------------------------------------------- */
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    padding: "13px 16px",
-    borderRadius: 10,
+    padding: "14px 20px",
+    borderRadius: 12,
     border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.05)",
+    background: "rgba(255,255,255,0.06)",
     color: "#fff",
     fontSize: 15,
     outline: "none",
+    boxSizing: "border-box",
   };
 
   return (
@@ -163,6 +265,74 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
         zIndex: 2000,
       }}
     >
+      <style>
+        {`
+/* GOOGLE AUTOCOMPLETE DROPDOWN */
+.pac-container {
+  background: rgba(10,10,10,0.92) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(6px) !important;
+  z-index: 999999 !important;
+}
+
+/* EACH ITEM */
+.pac-item {
+  padding: 12px 16px !important;
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 14px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+  background: transparent !important;
+}
+
+/* LAST ITEM SHOULD NOT HAVE BORDER */
+.pac-item:last-child {
+  border-bottom: none !important;
+}
+
+/* MAIN TEXT */
+.pac-item .pac-item-query {
+  color: #d8c48d !important; /* gold highlight */
+  font-weight: 600 !important;
+}
+
+/* SMALLER DESC TEXT */
+.pac-item span {
+  color: rgba(255,255,255,0.55) !important;
+}
+
+/* LOCATION ICON */
+.pac-icon {
+  filter: brightness(0) invert(1) sepia(80%) saturate(300%) hue-rotate(20deg);
+  opacity: 0.8 !important;
+}
+
+/* ACTIVE / HOVER STATE */
+.pac-item:hover,
+.pac-item-selected {
+  background: rgba(255,255,255,0.08) !important;
+}
+`}
+
+      </style>
+
+      <style>
+        {`
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset !important;
+  box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+`}
+      </style>
+
       {/* PANEL */}
       <div
         onClick={(e) => e.stopPropagation()}
@@ -174,7 +344,7 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
           boxShadow: "-20px 0 60px rgba(0,0,0,0.5)",
           backdropFilter: "blur(12px)",
           animation: "slideIn 0.35s ease-out",
-          overflow: "hidden",
+          overflow: "auto",
           padding: "34px 28px",
         }}
       >
@@ -198,188 +368,247 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
           ×
         </button>
 
-        {/* TITLE */}
-        <h2
+        {/* FORM WRAPPER (ALIGN EVERYTHING) */}
+        <div
           style={{
-            margin: 0,
-            fontSize: 34,
-            fontFamily: "Playfair Display",
-            color: "#d8c48d",
-            fontWeight: 700,
+            width: "100%",
+            maxWidth: 360,
+            margin: "0 auto",
           }}
         >
-          {mode === "signup" ? "Join Us" : "Welcome Back"}
-        </h2>
+          {/* TITLE */}
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 34,
+              fontFamily: "Playfair Display",
+              color: "#d8c48d",
+              fontWeight: 700,
+              textAlign: "left",
+            }}
+          >
+            {mode === "signup" ? "Join Us" : "Welcome Back"}
+          </h2>
 
-        <p
-          style={{
-            marginTop: 6,
-            color: "rgba(255,255,255,0.55)",
-            fontSize: 15,
-          }}
-        >
-          {mode === "signup"
-            ? "Create your account"
-            : "Sign in to continue"}
-        </p>
+          {/* DESCRIPTION */}
+          <p
+            style={{
+              marginTop: 6,
+              color: "rgba(255,255,255,0.55)",
+              fontSize: 15,
+              marginBottom: 20,
+              textAlign: "left",
+            }}
+          >
+            {mode === "signup"
+              ? "Create your account"
+              : "Sign in to continue"}
+          </p>
 
-        {/* FORM */}
-       <form onSubmit={handleSubmit} style={{ marginTop: 26 }}>
-  {/* Wrapper to control max width of all fields */}
-  <div style={{ width: "100%", maxWidth: 360, margin: "0 auto" }}>
+          {/* FORM */}
+          <form onSubmit={handleSubmit}>
+            {/* NAME FIELD */}
+            {mode === "signup" && (
+              <div style={{ marginBottom: 16 }}>
+                <input
+                  style={inputStyle}
+                  type="text"
+                  placeholder="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="off"
+                  name="name-field"
+                />
 
-    {/* FULL NAME (SIGNUP ONLY) */}
-    {mode === "signup" && (
-      <div style={{ marginBottom: 16 }}>
-        <input
-          style={inputStyle}
-          placeholder="Full Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-    )}
+              </div>
+            )}
 
-    {/* EMAIL */}
-    <div style={{ marginBottom: 16 }}>
-      <input
-        style={inputStyle}
-        type="email"
-        placeholder="Email Address"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-    </div>
+            {/* EMAIL */}
+            <div style={{ marginBottom: 16 }}>
+              <input
+                style={inputStyle}
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-    {/* PASSWORD */}
-    <div style={{ marginBottom: 16, position: "relative" }}>
-      <input
-        style={{
-          ...inputStyle,
-          paddingRight: 46, // Space for eye icon
-        }}
-        type={showPassword ? "text" : "password"}
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+            {/* PASSWORD */}
+            <div style={{ marginBottom: 16, position: "relative" }}>
+              <input
+                style={{ ...inputStyle, paddingRight: 46 }}
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                name="password-field"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                style={{
+                  position: "absolute",
+                  right: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#d8c48d",
+                }}
+              >
+                {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+              </button>
+            </div>
 
-      <button
-        type="button"
-        onClick={() => setShowPassword((p) => !p)}
-        style={{
-          position: "absolute",
-          right: 14,
-          top: "50%",
-          transform: "translateY(-50%)",
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          color: "#d8c48d",
-        }}
-      >
-        {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-      </button>
-    </div>
+            {/* LOCATION */}
+            {mode === "signup" && (
+              <div style={{ marginBottom: 18, position: "relative" }}>
+                <FiMapPin
+                  size={16}
+                  color="#d8c48d"
+                  style={{
+                    position: "absolute",
+                    left: 16,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                />
 
-    {/* LOCATION (SIGNUP ONLY) */}
-    {mode === "signup" && (
-      <div style={{ marginBottom: 18, position: "relative" }}>
-        <FiMapPin
-          size={16}
-          color="#d8c48d"
-          style={{
-            position: "absolute",
-            left: 12,
-            top: "50%",
-            transform: "translateY(-50%)",
-          }}
-        />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Search Location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  style={{
+                    ...inputStyle,
+                    paddingLeft: 44,
+                  }}
+                />
+              </div>
+            )}
 
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Search Location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          style={{
-            ...inputStyle,
-            paddingLeft: 40, // space for map icon
-          }}
-        />
-      </div>
-    )}
+            {/* ERROR MESSAGE */}
+            {err && (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  background: "rgba(255,0,0,0.1)",
+                  border: "1px solid rgba(255,0,0,0.25)",
+                  borderRadius: 10,
+                  color: "#f87171",
+                  fontSize: 13,
+                  marginBottom: 14,
+                }}
+              >
+                {err}
+              </div>
+            )}
 
-    {/* ERROR */}
-    {err && (
-      <div
-        style={{
-          padding: "12px 14px",
-          background: "rgba(255,0,0,0.1)",
-          border: "1px solid rgba(255,0,0,0.25)",
-          borderRadius: 10,
-          color: "#f87171",
-          fontSize: 13,
-          marginBottom: 14,
-        }}
-      >
-        {err}
-      </div>
-    )}
+            {/* SUBMIT BUTTON */}
+            <button
+              type="submit"
+              disabled={busy}
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                background: "linear-gradient(135deg,#b89c58,#d8c48d)",
+                borderRadius: 12,
+                color: "#000",
+                fontWeight: 700,
+                border: "none",
+                cursor: busy ? "not-allowed" : "pointer",
+                fontSize: 15,
+                boxSizing: "border-box",
+              }}
+            >
+              {busy
+                ? "Please wait…"
+                : mode === "signup"
+                  ? "Create Account"
+                  : "Sign In"}
+            </button>
 
-    {/* SUBMIT BUTTON */}
-    <button
-      type="submit"
-      disabled={busy}
-      style={{
-        width: "100%",
-        padding: "14px 0",
-        background: "linear-gradient(135deg,#b89c58,#d8c48d)",
-        borderRadius: 12,
-        color: "#000",
-        fontWeight: 700,
-        border: "none",
-        cursor: busy ? "not-allowed" : "pointer",
-        fontSize: 15,
-      }}
-    >
-      {busy
-        ? "Please wait…"
-        : mode === "signup"
-        ? "Create Account"
-        : "Sign In"}
-    </button>
+            {/* MODE SWITCH */}
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: 14,
+                color: "rgba(255,255,255,0.55)",
+                fontSize: 14,
+              }}
+            >
+              {mode === "signup"
+                ? "Already have an account?"
+                : "Don't have an account?"}{" "}
+              <span
+                onClick={() => {
+                  setMode(mode === "signup" ? "signin" : "signup");
+                  setErr("");
+                }}
+                style={{
+                  color: "#d8c48d",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {mode === "signup" ? "Sign In" : "Sign Up"}
+              </span>
+            </div>
 
-    {/* SWITCH MODE */}
-    <div
-      style={{
-        textAlign: "center",
-        marginTop: 14,
-        color: "rgba(255,255,255,0.55)",
-        fontSize: 14,
-      }}
-    >
-      {mode === "signup"
-        ? "Already have an account?"
-        : "Don't have an account?"}{" "}
-      <span
-        onClick={() => {
-          setMode(mode === "signup" ? "signin" : "signup");
-          setErr("");
-        }}
-        style={{
-          color: "#d8c48d",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-      >
-        {mode === "signup" ? "Sign In" : "Sign Up"}
-      </span>
-    </div>
+          </form>
+          {/* SEPARATOR LINE */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              margin: "18px 0",
+            }}
+          >
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.15)" }}></div>
+            <span
+              style={{
+                margin: "0 10px",
+                color: "rgba(255,255,255,0.45)",
+                fontSize: 13,
+              }}
+            >
+              or
+            </span>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.15)" }}></div>
+          </div>
 
-  </div>
-</form>
-
+          {/* GOOGLE SIGN IN BUTTON */}
+          <button
+            type="button"
+            onClick={google}
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: "#fff",
+              borderRadius: 12,
+              border: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: 15,
+              color: "#000",
+            }}
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+              style={{ width: 20, height: 20 }}
+            />
+            Continue with Google
+          </button>
+        </div>
       </div>
 
       {/* ANIMATION */}
@@ -387,7 +616,7 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
         {`
           @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(0); opacity: 1); }
           }
         `}
       </style>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 
 import AvailabilityPage from "../components/AvailabilityPage";
@@ -7,12 +7,15 @@ import RequestsPage from "../components/RequestsPage";
 
 import { useRouter } from "next/router";
 import Header from "../components/Header";
+import Loading from "../components/Loading";
 
 export default function PassTheBowlSystem() {
   const router = useRouter();
 
   const [currentPage, setCurrentPage] = useState("availability");
   const [selectedHelper, setSelectedHelper] = useState(null);
+  const [pageLoading, setPageLoading] = useState(true);
+
 
   const [userAvailability, setUserAvailability] = useState({
     isAvailable: false,
@@ -39,17 +42,24 @@ export default function PassTheBowlSystem() {
       )
     );
   };
-  console.log(requests, 'requestsss fr')
+
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (pageLoading) return <Loading />;
 
   return (
     <div
       style={{
+        marginTop: "100px",
+        marginBottom: "50px",
         minHeight: "100vh",
-        color: "white",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-
-
       {/* Availability */}
       {currentPage === "availability" && (
         <AvailabilityPage

@@ -1,346 +1,131 @@
 "use client";
-import { useState, useEffect } from "react";
-import {
-  MapPin,
-  Navigation,
-  Clock,
-  Users,
-  AlertTriangle,
-  Heart,
-  Droplet,
-  Package,
-} from "lucide-react";
 
-export default function FeedingStations() {
-  const [stations, setStations] = useState<any[]>([]);
-  const [filter, setFilter] = useState("all");
+import { useEffect, useState } from "react";
+import { db } from "../lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
+import GoogleMapWithStrayMarkers from "../components/GoogleMapWithStrayMarkers";
+import Loading from "../components/Loading";
+
+export default function StationsPage() {
+  const [spots, setSpots] = useState<any[]>([]);
+  const [filteredSpots, setFilteredSpots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const mockStations = [
-      {
-        id: 1,
-        name: "Central Park Feeding Point",
-        address: "123 Park Road, Singapore 238801",
-        distance: 0.8,
-        straysReported: 3,
-        lastFed: "2 hours ago",
-        volunteers: 5,
-        needsSupport: false,
-        supplies: { food: "High", water: "Medium" },
-      },
-      {
-        id: 2,
-        name: "Marina Bay Community Station",
-        address: "456 Marina Boulevard, Singapore 018989",
-        distance: 1.2,
-        straysReported: 7,
-        lastFed: "4 hours ago",
-        volunteers: 3,
-        needsSupport: true,
-        supplies: { food: "Low", water: "Low" },
-      },
-      {
-        id: 3,
-        name: "East Coast Park Shelter",
-        address: "789 East Coast Parkway, Singapore 449876",
-        distance: 2.5,
-        straysReported: 5,
-        lastFed: "1 hour ago",
-        volunteers: 8,
-        needsSupport: false,
-        supplies: { food: "High", water: "High" },
-      },
-    ];
-    setStations(mockStations);
+    const fetchSpots = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "pets"));
+
+        const list = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter(
+            (item: any) =>
+              item.coordinates?.lat && item.coordinates?.lng
+          );
+
+        setSpots(list);
+        setFilteredSpots(list);
+      } catch (err) {
+        console.error("Error fetching stray spots:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpots();
   }, []);
 
-  const filteredStations = stations.filter((s) => {
-    if (filter === "nearby") return s.distance <= 2;
-    if (filter === "urgent") return s.needsSupport;
-    return true;
-  });
-
-  const getSupplyColor = (level: string) => {
-    switch (level) {
-      case "High":
-        return "#22c55e";
-      case "Medium":
-        return "#f59e0b";
-      case "Low":
-        return "#ef4444";
-      default:
-        return "#9ca3af";
+  const handleSearch = () => {
+    if (!search.trim()) {
+      setFilteredSpots(spots);
+      return;
     }
+
+    const lower = search.toLowerCase();
+
+    const results = spots.filter((spot) =>
+      spot.location?.toLowerCase().includes(lower)
+    );
+
+    if (results.length === 0) {
+      alert("❗ No strays found here. Try another location.");
+    }
+
+    setFilteredSpots(results);
   };
 
   return (
     <div
       style={{
-        background: "#0f1117",
-        color: "#f3f4f6",
+        maxWidth: "1100px",
+        margin: "0 auto",
+        padding: "80px 24px",
         minHeight: "100vh",
-        padding: "40px 24px",
-        fontFamily: "Roboto, sans-serif",
+        background: "#000",
+        color: "#fff",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
-      <div
+      <h1
+      className="section-title"
         style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
+          textAlign: "center",
+          fontFamily: "Playfair Display",
+          fontSize: "52px",
+          marginBottom: "5px",
+          color: "#fff",
         }}
       >
-        {/* Header */}
-        <div
-          style={{
-            marginBottom: "32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "16px",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "32px",
-              fontWeight: 700,
-              color: "#fbbf24",
-              margin: 0,
-            }}
-          >
-            Feeding Stations
-          </h1>
+        Stray Stations Map
+      </h1>
+<p 
+  className="section-subtitle"
+style={{
+  textAlign: "center",
+  color: "rgba(255,255,255,0.65)",
+  fontSize: "18px",
+  marginBottom: "20px",
+  marginTop:'10px'
+}}>
+  Here's where our little stray friends were last spotted. Hope it helps someone reach them sooner. ❤️
+</p>
 
-          <span
-            style={{
-              background: "rgba(34,197,94,0.1)",
-              color: "#22c55e",
-              padding: "6px 14px",
-              borderRadius: "20px",
-              fontSize: "14px",
-              fontWeight: 600,
-            }}
-          >
-            ● Live Updates
-          </span>
-        </div>
+      {/* Map */}
+      {!loading && (
+        <GoogleMapWithStrayMarkers
+          spots={filteredSpots.map((item) => ({
+            id: item.id,
+            lat: item.coordinates.lat,
+            lng: item.coordinates.lng,
+            name: item.name,
+            location: item.location,
+          }))}
+        />
+      )}
 
-        {/* Filters */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            marginBottom: "40px",
-            flexWrap: "wrap",
-          }}
-        >
-          {["all", "nearby", "urgent"].map((key) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
-              style={{
-                padding: "10px 22px",
-                borderRadius: "10px",
-                fontWeight: 600,
-                cursor: "pointer",
-                border:
-                  filter === key
-                    ? "2px solid #fbbf24"
-                    : "1px solid rgba(255,255,255,0.1)",
-                background:
-                  filter === key ? "rgba(251,191,36,0.1)" : "transparent",
-                color: filter === key ? "#fbbf24" : "#d1d5db",
-                transition: "all 0.3s ease",
-              }}
-            >
-              {key === "all"
-                ? `All Stations (${stations.length})`
-                : key === "nearby"
-                ? `Nearby (${stations.filter((s) => s.distance <= 2).length})`
-                : `Needs Help (${stations.filter((s) => s.needsSupport).length})`}
-            </button>
-          ))}
-        </div>
-
-        {/* Cards */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-            gap: "24px",
-          }}
-        >
-          {filteredStations.map((station) => (
-            <div
-              key={station.id}
-              style={{
-                background: "#1a1d27",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow:
-                  "0 4px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
-                transition: "all 0.3s ease",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: "12px",
-                }}
-              >
-                <div>
-                  <h3
-                    style={{
-                      margin: "0 0 6px 0",
-                      fontSize: "18px",
-                      fontWeight: 600,
-                      color: "#f3f4f6",
-                    }}
-                  >
-                    {station.name}
-                  </h3>
-                  <p
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      color: "#9ca3af",
-                      fontSize: "13px",
-                      margin: 0,
-                    }}
-                  >
-                    <Navigation size={14} />
-                    {station.distance} km away
-                  </p>
-                </div>
-
-                {station.needsSupport && (
-                  <div
-                    style={{
-                      background: "rgba(239,68,68,0.1)",
-                      color: "#ef4444",
-                      padding: "6px 12px",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <AlertTriangle size={14} /> Urgent
-                  </div>
-                )}
-              </div>
-
-              <p
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  color: "#9ca3af",
-                  fontSize: "14px",
-                  marginBottom: "8px",
-                }}
-              >
-                <MapPin size={14} />
-                {station.address}
-              </p>
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "13px",
-                  color: "#9ca3af",
-                  marginBottom: "12px",
-                }}
-              >
-                <span style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                  <Clock size={14} /> Fed {station.lastFed}
-                </span>
-                <span style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                  <Users size={14} /> {station.volunteers} volunteers
-                </span>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "16px",
-                  color: "#d1d5db",
-                  fontSize: "13px",
-                }}
-              >
-                <span style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                  <Package size={14} /> Food:{" "}
-                  <strong
-                    style={{
-                      color: getSupplyColor(station.supplies.food),
-                      fontWeight: 700,
-                    }}
-                  >
-                    {station.supplies.food}
-                  </strong>
-                </span>
-                <span style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                  <Droplet size={14} /> Water:{" "}
-                  <strong
-                    style={{
-                      color: getSupplyColor(station.supplies.water),
-                      fontWeight: 700,
-                    }}
-                  >
-                    {station.supplies.water}
-                  </strong>
-                </span>
-              </div>
-
-              <div
-                style={{
-                  background: "rgba(239,68,68,0.08)",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span
-                  style={{
-                    display: "flex",
-                    gap: "6px",
-                    alignItems: "center",
-                    color: "#ef4444",
-                    fontWeight: 600,
-                    fontSize: "14px",
-                  }}
-                >
-                  <Heart size={16} /> {station.straysReported} strays here
-                </span>
-                <button
-                  style={{
-                    background: "transparent",
-                    border: "1px solid #ef4444",
-                    color: "#ef4444",
-                    borderRadius: "8px",
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  View →
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {loading && <Loading />}
+        <style>
+                {`
+                /* MOBILE title even smaller */
+                @media (max-width: 640px) {
+                    .section-title {
+                        font-size: 22px !important;
+                         line-height: 1.1 !important;
+                    }
+                    .section-subtitle {
+                           font-size:9px !important;
+                           line-height: 1.2 !important;
+                           margin-top: 5px !important;
+                    }
+                  
+                }
+                `}
+            </style>
     </div>
   );
 }

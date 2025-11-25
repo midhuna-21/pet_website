@@ -104,7 +104,8 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
         return;
       }
 
-      const strongPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+const strongPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&._-]).{6,}$/;
+
       if (!strongPassword.test(password)) {
         setErr("Enter a stronger password (min 6 chars, include letters & numbers).");
         return;

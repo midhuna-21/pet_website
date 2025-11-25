@@ -7,7 +7,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Header from "./Header";
 
 export default function RequestsPage({ requests, handleRequestAction }) {

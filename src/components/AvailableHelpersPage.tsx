@@ -1,8 +1,7 @@
-"use client";
-
+"use client"
 import { useState, useEffect } from 'react';
 import { MapPin, Clock, Send } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Header from "./Header";
 import Loading from './Loading';
 

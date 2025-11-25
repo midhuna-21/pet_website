@@ -27,6 +27,15 @@ export default function Header() {
         background: "rgba(0,0,0,0.45)",
       }}
     >
+      <style>{`
+  /* Hide mobile sidebar ALWAYS on desktop */
+  @media (min-width: 769px) {
+    .mobile-sidebar {
+      display: none !important;
+    }
+  }
+`}</style>
+
       {/* AUTH MODAL */}
       {showAuthModal && (
         <div
@@ -101,7 +110,7 @@ export default function Header() {
             Strays
           </HeaderLink>
 
-           <HeaderLink href="/stations" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
+          <HeaderLink href="/stations" pathname={pathname} user={user} setShowAuthModal={setShowAuthModal}>
             Stations
           </HeaderLink>
 
@@ -135,7 +144,21 @@ export default function Header() {
           className="mobile-only"
         >
           {mobileMenuOpen ? (
-            <X size={26} color="var(--gold-light)" />
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                background: "none",
+                border: "none",
+                color: "white",
+                fontSize: "20px",
+                cursor: "pointer",
+              }}
+            >
+              ✕
+            </button>
           ) : (
             <Menu size={26} color="var(--gold-light)" />
           )}
@@ -145,6 +168,7 @@ export default function Header() {
       {/* MOBILE MENU */}
       {mobileMenuOpen && (
         <div
+          className="mobile-menu-wrapper"
           style={{
             top: 0,
             left: 0,
@@ -155,6 +179,7 @@ export default function Header() {
             pointerEvents: "none",
           }}
         >
+
           <div className={`mobile-sidebar ${mobileMenuOpen ? "open" : ""}`}>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -180,6 +205,8 @@ export default function Header() {
             <MobileHeaderLink href="/tasks" pathname={pathname}>Tasks</MobileHeaderLink>
             <MobileHeaderLink href="/pass-the-bowl" pathname={pathname}>Pass the Bowl</MobileHeaderLink>
             {/* <MobileHeaderLink href="/dashboard" pathname={pathname}>Dashboard</MobileHeaderLink> */}
+
+            <LoginWidget />
           </div>
         </div>
       )}

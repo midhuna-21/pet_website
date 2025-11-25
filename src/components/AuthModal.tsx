@@ -93,7 +93,7 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
     };
   }, [open]);
 
- 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
@@ -104,7 +104,7 @@ export default function AuthModal({ open, onClose, onSelect }: Props) {
         return;
       }
 
-const strongPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&._-]).{6,}$/;
+      const strongPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&._-]).{6,}$/;
 
       if (!strongPassword.test(password)) {
         setErr("Enter a stronger password (min 6 chars, include letters & numbers).");
@@ -155,45 +155,45 @@ const strongPassword = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&._-]).{6,}$/;
     }
   };
 
-async function google() {
-  setErr(""); // clear previous errors
+  async function google() {
+    setErr(""); // clear previous errors
 
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
 
-    await setDoc(
-      doc(db, 'users', user.uid),
-      {
-        uid: user.uid,
-        name: user.displayName || '',
-        email: user.email || '',
-        photoURL: user.photoURL || '',
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp(),
-      },
-      { merge: true }
-    );
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          uid: user.uid,
+          name: user.displayName || '',
+          email: user.email || '',
+          photoURL: user.photoURL || '',
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+        },
+        { merge: true }
+      );
 
-    onClose();
+      onClose();
 
-  } catch (error: any) {
-    console.error("Google sign-in failed:", error);
+    } catch (error: any) {
+      console.error("Google sign-in failed:", error);
 
-    const code = error.code || "";
+      const code = error.code || "";
 
-    // Smoothed, user-friendly error messages
-    if (code === "auth/popup-closed-by-user") {
-      setErr("Google sign-in was cancelled.");
-    } else if (code === "auth/network-request-failed") {
-      setErr("Network issue — please check your connection and try again.");
-    } else if (code === "auth/internal-error") {
-      setErr("Server issue — please try again in a moment.");
-    } else {
-      setErr("Unable to sign in with Google. Please try again.");
+      // Smoothed, user-friendly error messages
+      if (code === "auth/popup-closed-by-user") {
+        setErr("Google sign-in was cancelled.");
+      } else if (code === "auth/network-request-failed") {
+        setErr("Network issue — please check your connection and try again.");
+      } else if (code === "auth/internal-error") {
+        setErr("Server issue — please try again in a moment.");
+      } else {
+        setErr("Unable to sign in with Google. Please try again.");
+      }
     }
   }
-}
 
 
   // async function google() {
@@ -333,6 +333,8 @@ input:-webkit-autofill:active {
 }
 `}
       </style>
+   
+
 
       {/* PANEL */}
       <div
